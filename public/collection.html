@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Clippings — newsLookup Gen2</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:      #0d0f12; --bg2: #13161b; --bg3: #1a1e26;
+    --border:  #2a2f3d; --accent: #4ade80; --accent2: #22d3ee;
+    --warn:    #fbbf24; --text: #e2e8f0; --muted: #64748b; --danger: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans',sans-serif; font-size: 14px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 12px; background: var(--bg2); flex-shrink: 0; }
+  .logo { font-family: 'IBM Plex Mono',monospace; font-size: 14px; font-weight: 600; color: var(--accent); }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .total-badge { font-family: 'IBM Plex Mono',monospace; font-size: 11px; color: var(--muted); margin-left: auto; }
+
+  /* Layout */
+  .layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+  /* Left panel — resizable */
+  .left-panel {
+    width: 320px; min-width: 200px; max-width: 600px;
+    border-right: 1px solid var(--border);
+    background: var(--bg2); display: flex; flex-direction: column;
+    overflow: hidden; resize: horizontal;
+  }
+  .left-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* Search box */
+  .search-wrap { position: relative; }
+  .search-input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: 'IBM Plex Sans',sans-serif;
+    font-size: 13px; padding: 10px 36px 10px 12px; outline: none; transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent2); }
+  .search-input::placeholder { color: var(--muted); }
+  .search-go {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: var(--accent); border: none; border-radius: 5px;
+    color: #0d0f12; font-size: 12px; padding: 3px 8px; cursor: pointer;
+  }
+
+  /* Filters */
+  .filter-section { display: flex; flex-direction: column; gap: 6px; }
+  .filter-label { font-family: 'IBM Plex Mono',monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .filter-select, .filter-input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 12px; padding: 6px 10px;
+    outline: none; font-family: 'IBM Plex Mono',monospace; cursor: pointer;
+  }
+  .filter-select:focus, .filter-input:focus { border-color: var(--accent2); }
+  .filter-select option { background: var(--bg2); }
+
+  /* Top N */
+  .topn-row { display: flex; align-items: center; gap: 8px; }
+  .topn-row label { font-family: 'IBM Plex Mono',monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .topn-select { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; padding: 5px 8px; outline: none; font-family: 'IBM Plex Mono',monospace; }
+
+  /* Buttons */
+  .btn { font-family: 'IBM Plex Mono',monospace; font-size: 11px; padding: 5px 12px; border-radius: 5px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; transition: all 0.15s; width: 100%; text-align: center; }
+  .btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 2px 0; }
+
+  /* Right panel */
+  .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .results-header { padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; background: var(--bg2); }
+  .results-header span { font-family: 'IBM Plex Mono',monospace; font-size: 11px; color: var(--muted); }
+  .results-header .mode-label { font-family: 'IBM Plex Mono',monospace; font-size: 11px; color: var(--accent2); }
+  .results-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* Collection card */
+  .col-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; transition: border-color 0.15s; min-width: 0; }
+  .col-card:hover { border-color: var(--accent2); }
+  .col-card-header { padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+  .col-score { font-family: 'IBM Plex Mono',monospace; font-size: 12px; color: var(--accent2); min-width: 36px; text-align: right; flex-shrink: 0; padding-top: 2px; }
+  .col-title { flex: 1; min-width: 0; }
+  .col-title a { color: var(--text); text-decoration: none; font-size: 13px; font-weight: 500; line-height: 1.5; word-break: break-word; }
+  .col-title a:hover { color: var(--accent); text-decoration: underline; }
+  .col-meta { padding: 0 14px 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .col-badge { font-family: 'IBM Plex Mono',monospace; font-size: 10px; padding: 2px 7px; border-radius: 10px; border: 1px solid var(--border); color: var(--muted); }
+  .col-badge.source { border-color: var(--accent2); color: var(--accent2); }
+  .col-summary { padding: 6px 14px 10px; font-size: 12px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); display: none; }
+  .col-summary.open { display: block; }
+  .col-actions { padding: 6px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
+  .col-btn { font-family: 'IBM Plex Mono',monospace; font-size: 11px; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .col-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .col-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Similarity slider */
+  .sim-bar { display: flex; align-items: center; gap: 8px; }
+  .sim-bar label { font-family: 'IBM Plex Mono',monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .sim-bar input[type=range] { flex: 1; accent-color: var(--accent2); }
+  .sim-val { font-family: 'IBM Plex Mono',monospace; font-size: 11px; color: var(--accent2); min-width: 32px; }
+
+  .empty-state { padding: 60px 20px; text-align: center; color: var(--muted); font-family: 'IBM Plex Mono',monospace; font-size: 12px; line-height: 2.5; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">news<span style="color:#f87171">Lookup</span> Gen2 — <span>📚 My Clippings</span></div>
+  <div class="total-badge" id="totalBadge">Loading...</div>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="left-body">
+
+      <div class="filter-section">
+        <div class="filter-label">🔍 AI Search</div>
+        <div class="search-wrap">
+          <input class="search-input" id="searchInput" placeholder="any news about US tech policy..."
+            onkeydown="if(event.key==='Enter') doSearch()"/>
+          <button class="search-go" onclick="doSearch()">▶</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-label">📅 Date</div>
+        <select class="filter-select" id="dateFilter" onchange="loadAll()">
+          <option value="all">All time</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-label">🌏 Region</div>
+        <select class="filter-select" id="regionFilter" onchange="loadAll()">
+          <option value="">All regions</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-label">📰 Source</div>
+        <input class="filter-input" id="sourceFilter" placeholder="e.g. SCMP" oninput="loadAll()"/>
+      </div>
+
+      <div class="topn-row">
+        <label>Show top:</label>
+        <select class="topn-select" id="topN">
+          <option value="10">10</option>
+          <option value="20" selected>20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <div class="sim-bar">
+          <label>🎯 Min Match</label>
+          <input type="range" id="simSlider" min="0" max="100" step="5" value="40"
+            oninput="updateSim(this.value)"/>
+          <span class="sim-val" id="simVal">40%</span>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <button class="btn" onclick="loadAll()">🔄 Show All</button>
+      <button class="btn danger" onclick="clearAll()">🗑 Clear All Clippings</button>
+
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="results-header">
+      <span id="resultsCount">—</span>
+      <span class="mode-label" id="modeLabel"></span>
+    </div>
+    <div class="results-body" id="resultsBody">
+      <div class="empty-state">Loading your collection...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let allItems    = [];
+let currentMode = 'all'; // 'all' or 'search'
+
+// ── Similarity filter ────────────────────────────────────────────────────────
+let minSimilarity = 40;
+
+function updateSim(val) {
+  minSimilarity = parseInt(val);
+  document.getElementById('simVal').textContent = val + '%';
+  // re-render with new threshold
+  if (currentMode === 'search') {
+    // re-filter already scored items
+    const filtered = lastSearchResults.filter(i => (i.searchScore || 0) >= minSimilarity);
+    renderItems(filtered, true);
+  } else {
+    renderItems(filterItems(allItems));
+  }
+}
+
+let lastSearchResults = []; // keep last AI search results for re-filtering
+
+// ── Load all items ────────────────────────────────────────────────────────────
+async function loadAll() {
+  currentMode = 'all';
+  document.getElementById('modeLabel').textContent = '';
+  try {
+    const res   = await fetch('/api/collection');
+    const data  = await res.json();
+    allItems = data.items || [];
+
+    // populate region filter
+    const regions = [...new Set(allItems.map(i => i.region).filter(Boolean))].sort();
+    const rSel = document.getElementById('regionFilter');
+    const cur  = rSel.value;
+    rSel.innerHTML = '<option value="">All regions</option>' +
+      regions.map(r => `<option value="${r}"${r===cur?' selected':''}>${r}</option>`).join('');
+
+    renderItems(filterItems(allItems));
+    updateTotal(allItems.length);
+  } catch(err) {
+    showError('Failed to load collection: ' + err.message);
+  }
+}
+
+function filterItems(items) {
+  const date   = document.getElementById('dateFilter').value;
+  const region = document.getElementById('regionFilter').value;
+  const source = document.getElementById('sourceFilter').value.toLowerCase().trim();
+  const topN   = parseInt(document.getElementById('topN').value);
+  const now    = new Date();
+
+  return items.filter(item => {
+    if (region && item.region !== region) return false;
+    if (source && !item.source?.toLowerCase().includes(source)) return false;
+    if (date !== 'all') {
+      const d = new Date(item.savedAt);
+      if (isNaN(d)) return false;
+      const days = (now - d) / 86400000;
+      if (date === 'today' && days > 1)  return false;
+      if (date === 'week'  && days > 7)  return false;
+      if (date === 'month' && days > 30) return false;
+    }
+    return true;
+  }).slice(0, topN);
+}
+
+// ── AI Search ─────────────────────────────────────────────────────────────────
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) { loadAll(); return; }
+
+  currentMode = 'search';
+  document.getElementById('modeLabel').textContent = '🤖 AI search: "' + q + '"';
+  document.getElementById('resultsCount').textContent = '⏳ Searching...';
+  document.getElementById('resultsBody').innerHTML =
+    '<div class="empty-state">⏳ Computing similarity scores...</div>';
+
+  try {
+    const topN = parseInt(document.getElementById('topN').value);
+    const res  = await fetch('/api/collection/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: q, topN }),
+    });
+    const data = await res.json();
+    if (data.error) { showError(data.error); return; }
+    lastSearchResults = data.items;
+    const simFiltered = data.items.filter(i => (i.searchScore || 0) >= minSimilarity);
+    renderItems(simFiltered, true);
+    document.getElementById('resultsCount').textContent =
+      `${simFiltered.length} result${simFiltered.length !== 1 ? 's' : ''} (min ${minSimilarity}% match)`;
+  } catch(err) {
+    showError('Search failed: ' + err.message);
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderItems(items, isSearch = false) {
+  const body = document.getElementById('resultsBody');
+  document.getElementById('resultsCount').textContent =
+    `${items.length} item${items.length !== 1 ? 's' : ''}`;
+
+  if (!items.length) {
+    body.innerHTML = '<div class="empty-state">📭 No items found.<br><br>' +
+      (currentMode === 'search' ? 'Try a different query or lower your search terms.' :
+       'Save articles from the main search using the 🤖 Summarise button.') + '</div>';
+    return;
+  }
+
+  body.innerHTML = items.map((item, i) => {
+    // Only show score during AI search — with clear label
+    const scoreLabel = isSearch && item.searchScore
+      ? `<span class="col-score" title="Similarity to your query">${item.searchScore}% match</span>`
+      : '';
+    const savedDate = item.savedAt ? new Date(item.savedAt).toLocaleString() : '';
+    const pubDate   = item.pubDate ? fmtDate(item.pubDate) : '';
+    const hasSummary = item.summary && item.summary.trim().length > 0;
+
+    return `<div class="col-card" id="card_${item.id}">
+      <div class="col-card-header">
+        ${scoreLabel}
+        <div class="col-title" style="flex:1">
+          <a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.title)}</a>
+        </div>
+      </div>
+      <div class="col-meta">
+        <span class="col-badge source">${esc(item.source||'')}</span>
+        <span class="col-badge">${esc(item.region||'')}</span>
+        ${pubDate ? `<span class="col-badge">${pubDate}</span>` : ''}
+        <span class="col-badge">saved ${savedDate}</span>
+      </div>
+      ${hasSummary ? `<div class="col-summary" id="summary_${item.id}">${esc(item.summary)}</div>` : ''}
+      <div class="col-actions">
+        ${hasSummary
+          ? `<button class="col-btn" onclick="toggleSummary(${item.id})">📝 Summary</button>`
+          : `<button class="col-btn" id="sum_${item.id}" onclick="summariseClipping(${item.id},'${esc(item.url)}','${esc(item.title).replace(/'/g,"\\'")}')">🤖 Summarise</button>`}
+        <button class="col-btn del" onclick="deleteItem(${item.id})">✕ Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSummary(id) {
+  const el = document.getElementById('summary_' + id);
+  if (el) el.classList.toggle('open');
+}
+
+async function deleteItem(id) {
+  if (!confirm('Remove this item from your collection?')) return;
+  try {
+    await fetch('/api/collection/' + id, { method: 'DELETE' });
+    document.getElementById('card_' + id)?.remove();
+    allItems = allItems.filter(i => i.id !== id);
+    updateTotal(allItems.length);
+    document.getElementById('resultsCount').textContent =
+      document.querySelectorAll('.col-card').length + ' items';
+  } catch(err) { alert('Delete failed: ' + err.message); }
+}
+
+async function clearAll() {
+  if (!confirm('Clear your ENTIRE collection?\n\nThis cannot be undone.')) return;
+  try {
+    await fetch('/api/collection', { method: 'DELETE' });
+    allItems = [];
+    renderItems([]);
+    updateTotal(0);
+  } catch(err) { alert('Failed: ' + err.message); }
+}
+
+function updateTotal(n) {
+  document.getElementById('totalBadge').textContent = n + ' item' + (n !== 1 ? 's' : '') + ' saved';
+}
+
+function showError(msg) {
+  document.getElementById('resultsBody').innerHTML =
+    `<div class="empty-state" style="color:var(--danger)">❌ ${esc(msg)}</div>`;
+}
+
+function fmtDate(raw) {
+  const d = new Date(raw);
+  if (isNaN(d)) return '';
+  const days = Math.floor((Date.now() - d) / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30)  return days + 'd ago';
+  return Math.floor(days/30) + 'mo ago';
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Summarise from Clippings ──────────────────────────────────────────────────
+async function summariseClipping(id, url, title) {
+  const btn = document.getElementById('sum_' + id);
+  if (!btn) return;
+  btn.textContent = '⏳';
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch('/api/summarise', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, link: url }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    // save summary back to DB
+    const saveRes = await fetch('/api/collection/summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, summary: data.summary }),
+    });
+
+    btn.textContent = '✅';
+    btn.title = 'Summary saved! Reload to view.';
+    // show summary inline
+    const card = document.getElementById('card_' + id);
+    if (card) {
+      const existing = card.querySelector('.col-summary');
+      if (existing) {
+        existing.textContent = data.summary;
+        existing.classList.add('open');
+      } else {
+        const div = document.createElement('div');
+        div.className = 'col-summary open';
+        div.textContent = data.summary;
+        card.querySelector('.col-actions').before(div);
+      }
+    }
+  } catch(err) {
+    btn.textContent = '❌';
+    btn.title = 'Error: ' + err.message;
+    btn.disabled = false;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>

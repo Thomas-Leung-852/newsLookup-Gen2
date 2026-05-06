@@ -1,0 +1,297 @@
+[
+  {
+    "name": "The Japan Times",
+    "rss": "https://www.japantimes.co.jp/feed/",
+    "region": "Asia"
+  },
+  {
+    "name": "The Straits Times",
+    "rss": "https://www.straitstimes.com/news/world/rss.xml",
+    "region": "Asia"
+  },
+  {
+    "name": "Times of India",
+    "rss": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+    "region": "Asia"
+  },
+  {
+    "name": "ABC News (AU)",
+    "rss": "https://www.abc.net.au/news/feed/52498/rss.xml",
+    "region": "Australia"
+  },
+  {
+    "name": "The Sydney Morning Herald",
+    "rss": "https://www.smh.com.au/rss/feed.xml",
+    "region": "Australia"
+  },
+  {
+    "name": "Bloomberg",
+    "rss": "https://feeds.bloomberg.com/markets/news.rss",
+    "region": "Business & Finance"
+  },
+  {
+    "name": "MarketWatch",
+    "rss": "https://www.marketwatch.com/rss/topstories",
+    "region": "Business & Finance"
+  },
+  {
+    "name": "The Economist",
+    "rss": "https://www.economist.com/the-world-this-week/rss.xml",
+    "region": "Business & Finance"
+  },
+  {
+    "name": "CBC News",
+    "rss": "https://www.cbc.ca/cmlink/rss-world",
+    "region": "Canada"
+  },
+  {
+    "name": "The Globe and Mail",
+    "rss": "https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/world/",
+    "region": "Canada"
+  },
+  {
+    "name": "Fintech Hong Kong",
+    "rss": "https://fintechnews.hk/feed/",
+    "region": "HK"
+  },
+  {
+    "name": "FT",
+    "rss": "https://www.ft.com/hong-kong?format=rss",
+    "region": "HK"
+  },
+  {
+    "name": "Google News",
+    "rss": "https://news.google.com/rss?hl=zh-HK&gl=HK&ceid=HK:zh-Hant",
+    "region": "HK"
+  },
+  {
+    "name": "HKFP",
+    "rss": "https://hongkongfp.com/feed/",
+    "region": "HK"
+  },
+  {
+    "name": "Hong Kong Herald",
+    "rss": "https://feeds.hongkongherald.com/rss/b82693edf38ebff8",
+    "region": "HK"
+  },
+  {
+    "name": "RTHK",
+    "rss": "https://rthk9.rthk.hk/rthk/news/rss/c_expressnews_clocal.xml",
+    "region": "HK"
+  },
+  {
+    "name": "South China Morning Post",
+    "rss": "https://www.scmp.com/rss/91/feed",
+    "region": "HK"
+  },
+  {
+    "name": "The Economic Times (HK)",
+    "rss": "https://economictimes.indiatimes.com/rssfeeds/121811213.cms",
+    "region": "HK"
+  },
+  {
+    "name": "The Guardian (HK)",
+    "rss": "https://www.theguardian.com/world/hong-kong/rss",
+    "region": "HK"
+  },
+  {
+    "name": "The Standard",
+    "rss": "https://www.thestandard.com.hk/rss_news.php",
+    "region": "HK"
+  },
+  {
+    "name": "Yahoo 新聞",
+    "rss": "https://hk.news.yahoo.com/rss/hong-kong",
+    "region": "HK"
+  },
+  {
+    "name": "巴士的報",
+    "rss": "https://www.bastillepost.com/hongkong/feed",
+    "region": "HK"
+  },
+  {
+    "name": "明報",
+    "rss": "https://news.mingpao.com/rss/pns/s00001.xml",
+    "region": "HK"
+  },
+  {
+    "name": "星島日報",
+    "rss": "https://www.stheadline.com/rss",
+    "region": "HK"
+  },
+  {
+    "name": "東周網",
+    "rss": "https://eastweek.stheadline.com/rss",
+    "region": "HK"
+  },
+  {
+    "name": "香港政府新聞網",
+    "rss": "https://www.news.gov.hk/tc/common/html/topstories.rss.xml",
+    "region": "HK"
+  },
+  {
+    "name": "ABC News (US)",
+    "rss": "https://abcnews.go.com/abcnews/topstories",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Al Jazeera",
+    "rss": "https://www.aljazeera.com/xml/rss/all.xml",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Associated Press",
+    "rss": "https://newsatme.com/go/ap/rss",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "BBC World News",
+    "rss": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "CBS News",
+    "rss": "https://www.cbsnews.com/latest/rss/main",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "CNN Top Stories",
+    "rss": "http://rss.cnn.com/rss/cnn_topstories.rss",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Deutsche Welle (DW)",
+    "rss": "https://rss.dw.com/rdf/rss-en-world",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Financial Times",
+    "rss": "https://www.ft.com/?format=rss",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Forbes Global",
+    "rss": "https://www.forbes.com/business/feed/",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Fox News World",
+    "rss": "https://feeds.foxnews.com/foxnews/world",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "France 24",
+    "rss": "https://www.france24.com/en/rss",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "NBC News",
+    "rss": "https://feeds.nbcnews.com/nbcnews/public/world",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "NPR News",
+    "rss": "https://feeds.npr.org/1001/rss.xml",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "PBS News",
+    "rss": "https://www.pbs.org/newshour/feeds/rss/politics",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Radio Free Europe",
+    "rss": "https://www.rferl.org/api/",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "The Hill",
+    "rss": "https://thehill.com/feed/",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "The New York Times",
+    "rss": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "The Washington Post",
+    "rss": "https://feeds.washingtonpost.com/rss/world",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Time Magazine",
+    "rss": "https://time.com/feed/",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "VOX World Politics",
+    "rss": "https://www.vox.com/rss/world-politics/index.xml",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Wall Street Journal",
+    "rss": "https://feeds.a.dj.com/rss/RSSWorldNews.xml",
+    "region": "News & Current Affairs"
+  },
+  {
+    "name": "Ars Technica",
+    "rss": "https://feeds.arstechnica.com/arstechnica/index",
+    "region": "Tech"
+  },
+  {
+    "name": "CNET",
+    "rss": "https://www.cnet.com/rss/news/",
+    "region": "Tech"
+  },
+  {
+    "name": "Engadget",
+    "rss": "https://www.engadget.com/rss.xml",
+    "region": "Tech"
+  },
+  {
+    "name": "Gizmodo",
+    "rss": "https://gizmodo.com/rss",
+    "region": "Tech"
+  },
+  {
+    "name": "MIT Tech Review",
+    "rss": "https://www.technologyreview.com/feed/",
+    "region": "Tech"
+  },
+  {
+    "name": "TechCrunch",
+    "rss": "https://techcrunch.com/feed/",
+    "region": "Tech"
+  },
+  {
+    "name": "Wired",
+    "rss": "https://www.wired.com/feed/rss",
+    "region": "Tech"
+  },
+  {
+    "name": "ZDNet",
+    "rss": "https://www.zdnet.com/news/rss.xml",
+    "region": "Tech"
+  },
+  {
+    "name": "Daily Mail",
+    "rss": "https://www.dailymail.co.uk/news/index.rss",
+    "region": "UK"
+  },
+  {
+    "name": "The Independent",
+    "rss": "https://www.independent.co.uk/news/world/rss",
+    "region": "UK"
+  },
+  {
+    "name": "The Mirror",
+    "rss": "https://www.mirror.co.uk/news/world-news/rss.xml",
+    "region": "UK"
+  },
+  {
+    "name": "The Telegraph",
+    "rss": "https://www.telegraph.co.uk/rss.xml",
+    "region": "UK"
+  }
+]

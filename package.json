@@ -1,0 +1,18 @@
+{
+  "name": "newslookup-v2",
+  "version": "2.0.0",
+  "description": "RSS news watcher with AI keyword matching — web UI",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "fast-xml-parser": "^5.7.2",
+    "node-fetch": "^3.3.2",
+    "ollama": "^0.5.0",
+    "sql.js": "^1.12.0"
+  }
+}
