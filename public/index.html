@@ -578,6 +578,153 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+  /* ── Cache bar ── */
+  .cache-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .cache-age {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cache-age.fresh { color: var(--accent); }
+  .cache-age.stale { color: var(--warn); }
+  .cache-age.empty { color: var(--muted); }
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .refresh-btn:hover { border-color: var(--accent2); }
+
+  /* ── Responsive: iPad & iPhone ── */
+
+  /* Sidebar toggle button — hidden on desktop */
+  .sidebar-toggle {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--accent2);
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* iPad landscape & smaller (≤1024px) */
+  @media (max-width: 1024px) {
+    aside {
+      width: 300px;
+      min-width: 280px;
+    }
+  }
+
+  /* iPad portrait & large phones (≤768px) */
+  @media (max-width: 768px) {
+    body { overflow: auto; }
+
+    .layout {
+      flex-direction: column;
+      height: auto;
+      overflow: visible;
+    }
+
+    header {
+      padding: 10px 14px;
+      gap: 8px;
+    }
+    header .logo { font-size: 13px; }
+
+    .sidebar-toggle { display: block; }
+
+    aside {
+      width: 100%;
+      min-width: unset;
+      max-height: none;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      /* collapsed by default on mobile */
+      display: none;
+      flex-shrink: 0;
+    }
+    aside.open { display: flex; }
+
+    .sidebar-controls { padding: 8px; }
+    .sidebar-btn { padding: 6px 4px; font-size: 10px; }
+
+    main {
+      height: auto;
+      min-height: 0;
+      flex: none;
+    }
+
+    .chat-log {
+      padding: 12px 14px;
+      min-height: 200px;
+      overflow-y: visible;
+    }
+
+    .chat-toolbar {
+      padding: 6px 14px 0;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+
+    .filter-bar {
+      padding: 6px 14px 0;
+      gap: 4px;
+    }
+    .filter-chip { font-size: 10px; padding: 3px 7px; }
+
+    .threshold-bar { padding: 6px 14px 0; gap: 6px; }
+    .threshold-hint { display: none; }
+
+    .input-bar { padding: 10px 14px; gap: 8px; }
+    .input-wrap textarea { font-size: 16px; /* prevents iOS zoom */ }
+    .hint { display: none; }
+
+    /* Results table — make scrollable horizontally */
+    .results-wrap { overflow-x: auto; }
+    table { min-width: 500px; }
+
+    /* Modals fill screen on mobile */
+    .summary-box { width: 95vw; max-height: 85vh; }
+    .preview-box { width: 98vw; max-width: 98vw; max-height: 88vh; }
+    .history-panel { width: 95vw; max-width: 95vw; }
+
+    /* Preview articles: hide article number col */
+    .preview-article-num { display: none; }
+    .preview-article { padding: 5px 12px; }
+  }
+
+  /* iPhone small (≤430px) */
+  @media (max-width: 430px) {
+    header .logo { font-size: 12px; }
+    .filter-chip { font-size: 10px; padding: 2px 6px; }
+    .clear-btn { font-size: 10px; padding: 3px 7px; }
+    .chat-toolbar { gap: 4px; }
+    .msg-text { padding: 8px 10px; font-size: 13px; }
+    .input-bar { padding: 8px 10px; }
+  }
+
   .preview-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.75); z-index: 100;
@@ -623,6 +770,7 @@
 
 <header>
   <div class="logo">news<span style="color:#f87171">Lookup</span> Gen2 Ver 1.0.0</div>
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sources">☰ Sources</button>
   <div class="status-dot idle" id="statusDot"></div>
 </header>
 
@@ -2142,6 +2290,14 @@ async function clipArticle_del_1(btn, articleJson) {
     btn.title       = 'Error: ' + err.message;
     btn.disabled    = false;
   }
+}
+
+// ── Sidebar Toggle (mobile) ───────────────────────────────────────────────────
+function toggleSidebar() {
+  const aside = document.querySelector('aside');
+  const btn   = document.getElementById('sidebarToggle');
+  const open  = aside.classList.toggle('open');
+  btn.textContent = open ? '✕ Sources' : '☰ Sources';
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

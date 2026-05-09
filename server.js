@@ -836,6 +836,19 @@ app.get("/api/collection", (req, res) => {
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
+// GET /api/collection/unembedded — list items missing vectors (for re-embed prompt)
+app.get("/api/collection/unembedded", (req, res) => {
+  try {
+    const rows = collectionDb.exec(
+      "SELECT id,newsId,url,title FROM collection WHERE vector IS NULL ORDER BY savedAt DESC"
+    );
+    if (!rows.length) return res.json({ items: [], total: 0 });
+    const cols  = rows[0].columns;
+    const items = rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c, r[i]])));
+    res.json({ items, total: items.length });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
 // GET /api/get-vector?title=... — return cached vector for a title
 app.get("/api/get-vector", async (req, res) => {
   const { title } = req.query;

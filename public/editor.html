@@ -331,6 +331,70 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+  /* ── Left panel toggle (mobile) ── */
+  .panel-toggle {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--accent2);
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    body { overflow: auto; }
+
+    header { padding: 10px 14px; gap: 8px; }
+    .logo { font-size: 12px; }
+    .site-count { font-size: 10px; }
+    .panel-toggle { display: block; }
+
+    .layout { flex-direction: column; overflow: visible; }
+
+    .left-panel {
+      width: 100%;
+      min-width: unset;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      display: none;
+      max-height: 60vh;
+    }
+    .left-panel.open { display: flex; }
+
+    .left-toolbar { padding: 8px; gap: 6px; }
+    .btn-row { flex-wrap: wrap; }
+    .btn { padding: 6px 10px; font-size: 12px; }
+
+    .search-input { font-size: 16px; }
+    select.filter-select { font-size: 16px; }
+
+    .right-panel {
+      padding: 14px;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .field-group input { font-size: 16px; /* prevents iOS auto-zoom */ }
+
+    .right-actions { flex-wrap: wrap; gap: 6px; }
+
+    /* Duplicate modal */
+    .dup-box { width: 96vw; max-width: 96vw; max-height: 85vh; }
+    .dup-row { flex-wrap: wrap; gap: 6px; }
+    .dup-region { min-width: unset; }
+  }
+
+  @media (max-width: 430px) {
+    .logo { font-size: 11px; }
+    .right-panel { padding: 10px; }
+    .test-articles { max-height: 180px; }
+  }
+
   /* empty state */
   .empty-hint {
     flex: 1;
@@ -407,6 +471,7 @@
 
 <header>
   <div class="logo">news<span>Lookup</span> Gen2 — RSS Site Editor</div>
+  <button class="panel-toggle" id="panelToggle" onclick="togglePanel()" title="Toggle site list">☰ Sites</button>
   <div class="site-count" id="siteCount">Loading...</div>
 </header>
 
@@ -844,6 +909,14 @@ function showToast(msg) {
 // ── Util ──────────────────────────────────────────────────────────────────────
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Panel Toggle (mobile) ─────────────────────────────────────────────────────
+function togglePanel() {
+  const panel = document.querySelector('.left-panel');
+  const btn   = document.getElementById('panelToggle');
+  const open  = panel.classList.toggle('open');
+  btn.textContent = open ? '✕ Sites' : '☰ Sites';
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
