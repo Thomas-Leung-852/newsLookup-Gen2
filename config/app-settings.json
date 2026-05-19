@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "collection": {
+    "suggestedTagsThreshold": 80,
+    "_meta": {
+      "suggestedTagsThreshold": {
+        "label": "Suggested Tags Min Score",
+        "description": "Minimum confidence score (0–100) an AI-suggested tag must reach before it is shown to the user.",
+        "type": "integer",
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "default": 80
+      }
+    }
+  },
+  "search": {
+    "embedThreshold": 0.5,
+    "keywordFallbackEnabled": true,
+    "_meta": {
+      "embedThreshold": {
+        "label": "Embedding Similarity Threshold",
+        "description": "Minimum cosine similarity (0.0–1.0) for an article to be included in search results.",
+        "type": "float",
+        "min": 0.4,
+        "max": 0.9,
+        "step": 0.01,
+        "default": 0.5,
+        "hidden": true
+      },
+      "keywordFallbackEnabled": {
+        "label": "Keyword Fallback",
+        "description": "Fall back to keyword matching when the local embedding model is offline.",
+        "type": "boolean",
+        "default": true,
+        "hidden": true
+      }
+    }
+  },
+  "rss": {
+    "cacheTtlMinutes": 15,
+    "_meta": {
+      "cacheTtlMinutes": {
+        "label": "RSS Cache TTL",
+        "description": "How long (in minutes) fetched RSS feeds are cached in memory before re-fetching.",
+        "type": "integer",
+        "min": 15,
+        "max": 60,
+        "unit": "min",
+        "default": 15
+      }
+    }
+  },
+  "keywords": {
+    "maxSuggested": 15,
+    "_meta": {
+      "maxSuggested": {
+        "label": "Max Keyword Suggestions",
+        "description": "Maximum number of trending keywords returned by the AI keyword suggestion endpoint.",
+        "type": "integer",
+        "min": 10,
+        "max": 20,
+        "default": 10
+      }
+    }
+  },
+  "updatedAt": "2026-05-17T02:06:35.857Z"
+}

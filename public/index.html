@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>newsLookup Gen2 Ver 1.0.0</title>
+<title>newsLookup Gen2 Ver 1.2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
   :root {
@@ -337,6 +337,151 @@
     color: var(--muted);
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
+  }
+
+  /* ── Suggested Keywords ── */
+  .keywords-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 24px 0;
+    flex-shrink: 0;
+    min-height: 32px;
+    position: relative;
+  }
+  .keywords-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .kw-refresh-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+  .kw-refresh-btn:hover { border-color: var(--accent2); color: var(--accent2); transform: rotate(30deg); }
+  .kw-refresh-btn:disabled { opacity: 0.2; cursor: not-allowed; transform: none; }
+  .keywords-list {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    flex: 1;
+    overflow: hidden;
+  }
+  .kw-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 2px 9px;
+    border-radius: 10px;
+    border: 1px solid var(--accent2);
+    background: transparent;
+    color: var(--accent2);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    opacity: 0.85;
+    animation: kwFadeIn 0.3s ease;
+  }
+  @keyframes kwFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 0.85; transform: translateY(0); }
+  }
+  .kw-chip:hover { background: #0a1a22; opacity: 1; transform: translateY(-1px); }
+  .kw-chip.selected { background: var(--accent2); color: var(--bg); opacity: 1; }
+
+  /* Mobile keywords nav */
+  .keywords-nav {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  .kw-nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .kw-nav-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .kw-nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .kw-mobile-chips {
+    display: flex;
+    gap: 5px;
+    flex: 1;
+    overflow: hidden;
+  }
+  .kw-mobile-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 2px 9px;
+    border-radius: 10px;
+    border: 1px solid var(--accent2);
+    background: transparent;
+    color: var(--accent2);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex: 1;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kw-mobile-chip:hover { background: #0a1a22; }
+  .kw-mobile-chip.selected { background: var(--accent2); color: var(--bg); }
+  .kw-page-indicator {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Keywords generating overlay */
+  .keywords-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(13,15,18,0.92);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 4px;
+  }
+  .keywords-overlay.active { display: flex; }
+  .kw-spinner {
+    width: 10px; height: 10px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: kwSpin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes kwSpin { to { transform: rotate(360deg); } }
+  .kw-overlay-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+  }
+
+  @media (max-width: 768px) {
+    .keywords-bar { padding: 6px 14px 0; }
+    .keywords-list { display: none; }
+    .keywords-nav  { display: flex; }
   }
 
   /* ── Threshold slider ── */
@@ -769,7 +914,7 @@
 <body>
 
 <header>
-  <div class="logo">news<span style="color:#f87171">Lookup</span> Gen2 Ver 1.0.0</div>
+  <div class="logo">news<span style="color:#f87171">Lookup</span> Gen2 Ver 1.2.0</div>
   <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sources">☰ Sources</button>
   <div class="status-dot idle" id="statusDot"></div>
 </header>
@@ -806,6 +951,7 @@
     <div class="chat-toolbar">
       <button class="clear-btn" onclick="window.open('/collection','_blank')" title="My Clippings" style="border-color:var(--accent);color:var(--accent)">✂️ Clippings</button>
       <button class="clear-btn" onclick="openHistory()" title="Search History" style="border-color:var(--warn);color:var(--warn)">📋 History</button>
+      <button class="clear-btn" onclick="window.open('/settings','_blank')" title="App Settings" style="border-color:var(--muted);color:var(--muted)">⚙️ Settings</button>
       <button class="clear-btn" onclick="clearChat()" title="Clear chat">✕ Clear</button>
     </div>
     <div class="chat-log" id="chatLog">
@@ -815,7 +961,7 @@
           <div class="msg-label">newsLookup</div>
           <div class="msg-text">
             Hello! Enter your keywords or topics below to search across news sites.<br><br>
-            You can type in <strong>English</strong>, <strong>繁體中文</strong>, or <strong>廣東話</strong> — or mix all three.<br><br>
+            You can type in <strong>English</strong>, <strong>Traditional Chinese (繁體中文)</strong>, or <strong>Cantonese (廣東話)</strong> — or mix all three.<br><br>
             <span style="color:var(--muted);font-size:12px">Example: <em>香港樓市, interest rate hike, 炒樓</em></span>
           </div>
         </div>
@@ -833,12 +979,32 @@
       <button class="filter-chip" onclick="setFilter('all',this)">All</button>
     </div>
 
+    <!-- ── Suggested Keywords ── -->
+    <div class="keywords-bar" id="keywordsBar">
+      <span class="keywords-label" id="kwLabel">💡 Suggested Keywords:</span>
+      <button class="kw-refresh-btn" id="kwRefreshBtn" onclick="refreshSuggestedKeywords()" title="Refresh suggested keywords">↻</button>
+      <!-- Desktop: all chips in a wrapping row -->
+      <div class="keywords-list" id="kwList"></div>
+      <!-- Mobile: 3 chips with prev/next -->
+      <div class="keywords-nav" id="kwNav">
+        <button class="kw-nav-btn" id="kwPrev" onclick="kwNavigate(-1)">‹</button>
+        <div class="kw-mobile-chips" id="kwMobileChips"></div>
+        <button class="kw-nav-btn" id="kwNext" onclick="kwNavigate(1)">›</button>
+        <span class="kw-page-indicator" id="kwPageIndicator"></span>
+      </div>
+      <!-- Generating overlay -->
+      <div class="keywords-overlay" id="kwOverlay">
+        <div class="kw-spinner"></div>
+        <span class="kw-overlay-text">Creating suggested keywords…</span>
+      </div>
+    </div>
+
     <div class="threshold-bar">
       <label>🎯 Similarity:</label>
-      <input type="range" id="thresholdSlider" min="0.3" max="0.9" step="0.05" value="0.40"
+      <input type="range" id="thresholdSlider" min="0.40" max="0.90" step="0.05" value="0.50"
         oninput="updateThreshold(this.value)"/>
-      <span class="threshold-val" id="thresholdVal">0.55</span>
-      <span class="threshold-hint" id="thresholdHint">balanced</span>
+      <span class="threshold-val" id="thresholdVal">50%</span>
+      <span class="threshold-hint" id="thresholdHint">score ≥ 50%</span>
     </div>
 
     <div class="input-bar">
@@ -910,7 +1076,7 @@ let sortCol = 'score';   // default sort by score
 let sortDir = -1;        // -1 = desc, 1 = asc
 let isSearching = false;
 let activeFilter = 'today';
-let similarityThreshold = 0.40;
+let similarityThreshold = 0.50;
 let searchHistory = JSON.parse(sessionStorage.getItem('nlg2_history') || '[]');
 let historyIndex  = -1;   // -1 = not browsing history
 let currentDraft  = '';   // saves what user was typing before browsing history
@@ -1271,6 +1437,8 @@ function filterByRegion() {
   const region = document.getElementById('regionFilter').value;
   const filtered = region ? allSites.filter(s => s.region === region) : allSites;
   renderSiteList(filtered);
+  // Reload keywords when region changes
+  loadSuggestedKeywords();
 }
 
 // select/deselect only the currently visible sites
@@ -1353,17 +1521,9 @@ function appendMsg(role, html) {
 // ── Threshold ────────────────────────────────────────────────────────────────
 function updateThreshold(val) {
   similarityThreshold = parseFloat(val);
-  document.getElementById('thresholdVal').textContent = val;
-  // Hints tuned for qwen3-embedding:8b scoring range (30-65%)
-  const hints = {
-    0.3:  'very loose', 0.35: 'loose (1 word)',
-    0.4:  'balanced (2-3 words)', 0.45: 'balanced (4-6 words)',
-    0.5:  'strict', 0.55: 'strict',
-    0.6:  'very strict', 0.65: 'very strict',
-    0.7:  'precise', 0.75: 'precise',
-    0.8:  'exact match', 0.85: 'exact match', 0.9: 'exact match'
-  };
-  document.getElementById('thresholdHint').textContent = hints[val] || 'balanced';
+  const pct = Math.round(parseFloat(val) * 100);
+  document.getElementById('thresholdVal').textContent = pct + '%';
+  document.getElementById('thresholdHint').textContent = 'score ≥ ' + pct + '%';
 }
 
 // load default threshold from server config
@@ -1371,7 +1531,7 @@ fetch('/api/embed-config').then(r => r.json()).then(cfg => {
   if (cfg.threshold) {
     similarityThreshold = cfg.threshold;
     document.getElementById('thresholdSlider').value = cfg.threshold;
-    updateThreshold(cfg.threshold.toString());
+    updateThreshold(cfg.threshold.toFixed ? cfg.threshold.toFixed(2) : cfg.threshold.toString());
   }
   if (cfg.model) {
     const hint = document.getElementById('thresholdHint');
@@ -1389,7 +1549,195 @@ function setFilter(filter, btn) {
   activeFilter = filter;
   document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  // Load keywords whenever the date filter changes
+  loadSuggestedKeywords();
 }
+
+// ── Suggested Keywords ────────────────────────────────────────────────────────
+
+let suggestedKeywords = [];       // current keyword list
+let kwMobilePage = 0;             // current mobile page (3 per page)
+const KW_MOBILE_PER_PAGE = 3;
+const KW_TTL_MS = 3 * 60 * 60 * 1000; // 3h — must match server
+let kwGenerating = false;
+
+function getActiveRegion() {
+  return document.getElementById('regionFilter').value || 'all';
+}
+
+async function loadSuggestedKeywords() {
+  if (kwGenerating) return;
+  const region = getActiveRegion();
+  const dateFilter = activeFilter;
+
+  try {
+    const res  = await fetch(`/api/suggested-keywords?region=${encodeURIComponent(region)}&dateFilter=${encodeURIComponent(dateFilter)}`);
+    const data = await res.json();
+
+    if (data.status === 'fresh' && data.keywords && data.keywords.length) {
+      // Use Case #2: fresh keywords exist — render them
+      renderKeywords(data.keywords);
+    } else if (data.status === 'stale' && data.keywords && data.keywords.length) {
+      // Use Case #3: stale — show overlay, regenerate
+      renderKeywords(data.keywords); // show old ones behind overlay
+      generateKeywords(region, dateFilter);
+    } else {
+      // Use Case #1: no keywords yet — show empty state
+      // Don't auto-generate; wait for user to trigger a search first
+      // But if user has already searched, generate proactively
+      renderKeywords([]);
+    }
+  } catch(e) {
+    renderKeywords([]);
+  }
+}
+
+async function generateKeywords(region, dateFilter) {
+  if (kwGenerating) return;
+  kwGenerating = true;
+  showKwOverlay(true);
+
+  try {
+    const res  = await fetch('/api/suggested-keywords/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ region, dateFilter }),
+    });
+    const data = await res.json();
+    if (data.keywords && data.keywords.length) {
+      renderKeywords(data.keywords);
+    }
+  } catch(e) {
+    console.warn('Keywords generate failed:', e.message);
+  } finally {
+    kwGenerating = false;
+    showKwOverlay(false);
+  }
+}
+
+function showKwOverlay(visible) {
+  const overlay = document.getElementById('kwOverlay');
+  if (overlay) overlay.classList.toggle('active', visible);
+  const btn = document.getElementById('kwRefreshBtn');
+  if (btn) btn.disabled = visible;
+}
+
+async function refreshSuggestedKeywords() {
+  if (kwGenerating) return;
+  const region = getActiveRegion();
+  await generateKeywords(region, activeFilter);
+}
+
+function renderKeywords(keywords) {
+  suggestedKeywords = keywords;
+  kwMobilePage = 0;
+
+  const label = document.getElementById('kwLabel');
+  const list  = document.getElementById('kwList');
+
+  if (!keywords.length) {
+    if (label) label.textContent = '💡 Suggested Keywords:';
+    if (list)  list.innerHTML = '<span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);opacity:0.6">— search to generate —</span>';
+    renderMobileKeywords();
+    return;
+  }
+
+  if (label) label.textContent = '💡 Suggested Keywords:';
+
+  // Desktop chips — keyword only, no count badge
+  if (list) {
+    list.innerHTML = keywords.map((item, i) => {
+      const kw = item.keyword || item;
+      return `<button class="kw-chip" onclick="useKeyword(${i})">${esc(kw)}</button>`;
+    }).join('');
+  }
+
+  // Mobile chips
+  renderMobileKeywords();
+}
+
+function renderMobileKeywords() {
+  const chips = document.getElementById('kwMobileChips');
+  const prev  = document.getElementById('kwPrev');
+  const next  = document.getElementById('kwNext');
+  const indicator = document.getElementById('kwPageIndicator');
+  if (!chips) return;
+
+  const totalPages = Math.max(1, Math.ceil(suggestedKeywords.length / KW_MOBILE_PER_PAGE));
+  kwMobilePage = Math.min(kwMobilePage, totalPages - 1);
+
+  if (!suggestedKeywords.length) {
+    chips.innerHTML = '<span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);opacity:0.6;flex:1;text-align:center">— search to generate —</span>';
+    if (prev) prev.disabled = true;
+    if (next) next.disabled = true;
+    if (indicator) indicator.textContent = '';
+    return;
+  }
+
+  const start = kwMobilePage * KW_MOBILE_PER_PAGE;
+  const slice = suggestedKeywords.slice(start, start + KW_MOBILE_PER_PAGE);
+
+  chips.innerHTML = slice.map((item, j) => {
+    const idx = start + j;
+    const kw  = item.keyword || item;
+    return `<button class="kw-mobile-chip" onclick="useKeyword(${idx})">${esc(kw)}</button>`;
+  }).join('');
+
+  if (prev) prev.disabled = (kwMobilePage === 0);
+  if (next) next.disabled = (kwMobilePage >= totalPages - 1);
+  if (indicator) indicator.textContent = (kwMobilePage + 1) + '/' + totalPages;
+}
+
+function kwNavigate(dir) {
+  const totalPages = Math.ceil(suggestedKeywords.length / KW_MOBILE_PER_PAGE);
+  kwMobilePage = Math.max(0, Math.min(totalPages - 1, kwMobilePage + dir));
+  renderMobileKeywords();
+}
+
+function useKeyword(idx) {
+  const item = suggestedKeywords[idx];
+  if (!item) return;
+  const kw = item.keyword || item; // handle both {keyword,count} and plain string
+
+  // Toggle selection highlight on both desktop and mobile chips
+  const allDesktop = document.querySelectorAll('.kw-chip');
+  allDesktop.forEach((el, i) => el.classList.toggle('selected', i === idx));
+  const allMobile = document.querySelectorAll('.kw-mobile-chip');
+  const start = kwMobilePage * KW_MOBILE_PER_PAGE;
+  allMobile.forEach((el, j) => el.classList.toggle('selected', (start + j) === idx));
+
+  // Append to or set input box
+  const input = document.getElementById('inputBox');
+  if (!input) return;
+  const existing = input.value.trim();
+  if (existing) {
+    // Append with comma if not already present
+    const already = existing.split(/[,，、\n]+/).map(k => k.trim()).includes(kw);
+    if (!already) {
+      input.value = existing + ', ' + kw;
+      autoResize(input);
+    }
+  } else {
+    input.value = kw;
+    autoResize(input);
+  }
+  input.focus();
+}
+
+// After a search completes, generate keywords if we don't have fresh ones
+function postSearchKeywordCheck() {
+  const region = getActiveRegion();
+  fetch(`/api/suggested-keywords?region=${encodeURIComponent(region)}&dateFilter=${encodeURIComponent(activeFilter)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'none') {
+        // Generate now that we have a fresh search context
+        generateKeywords(region, activeFilter);
+      }
+    })
+    .catch(() => {});
+}
+
 
 // ── Search ────────────────────────────────────────────────────────────────────
 async function startSearch() {
@@ -1528,6 +1876,53 @@ async function startSearch() {
             document.getElementById('thresholdSlider').value = evt.effectiveThreshold;
             updateThreshold(String(evt.effectiveThreshold));
           }
+
+          // ── Auto-retry with lower threshold when zero results ──────────────
+          const RETRY_THRESHOLD = 0.30;
+          if (evt.total === 0 && evt.mode !== 'keyword' && similarityThreshold > RETRY_THRESHOLD) {
+            const pm = document.getElementById(sid + '_progressMsg');
+            if (pm) pm.textContent = `🔍 No results at ${Math.round(similarityThreshold * 100)}% — retrying with best matches above 30%…`;
+            // Re-run search with lower threshold, results appended to same card
+            const sites = [...document.querySelectorAll('#siteList input:checked')].map(cb => cb.value);
+            const retryRes = await fetch('/api/search', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ keywords, sites, dateFilter: activeFilter, threshold: RETRY_THRESHOLD }),
+            });
+            const retryReader = retryRes.body.getReader();
+            const retryDecoder = new TextDecoder();
+            let retryBuf = '';
+            let retryTotal = 0;
+            while (true) {
+              const { done: rDone, value: rVal } = await retryReader.read();
+              if (rDone) break;
+              retryBuf += retryDecoder.decode(rVal, { stream: true });
+              const retryLines = retryBuf.split('\n\n');
+              retryBuf = retryLines.pop();
+              for (const line of retryLines) {
+                if (!line.startsWith('data:')) continue;
+                try {
+                  const re = JSON.parse(line.slice(5).trim());
+                  if (re.type === 'match') {
+                    currentResults.push(re.article);
+                    retryTotal++;
+                    renderLiveTable(sid);
+                  }
+                  if (re.type === 'done') retryTotal = re.total;
+                } catch {}
+              }
+            }
+            const pm2 = document.getElementById(sid + '_progressMsg');
+            if (pm2) pm2.textContent = retryTotal === 0
+              ? `🔍 No matching articles found even at 30%.${modeLabel}`
+              : `⚠️ No results at ${Math.round(similarityThreshold * 100)}% — showing ${retryTotal} best match${retryTotal > 1 ? 'es' : ''} above 30%`;
+            clearInterval(timerInterval);
+            timerInterval = null;
+            setSearching(false);
+            postSearchKeywordCheck();
+            return;
+          }
+
           const pm = document.getElementById(sid + '_progressMsg');
           if (pm) pm.textContent = evt.total === 0
             ? `🔍 No matching articles found. (${elapsed})${modeLabel}`
@@ -1556,6 +1951,19 @@ async function startSearch() {
             time:      new Date().toLocaleTimeString(),
           });
           if (sessionHistory.length > 20) sessionHistory.pop();
+
+          // ── Final sort: score desc once all articles are in ──
+          sortCol = 'score';
+          sortDir = -1;
+          currentResults.sort((a, b) => (parseFloat(b.score) || 0) - (parseFloat(a.score) || 0));
+          renderLiveTable(sid);
+          ['source','region','score','title','pubDate'].forEach(c => {
+            const el = document.getElementById('sort_' + c);
+            if (el) el.textContent = c === 'score' ? '\u25bc' : '';
+          });
+
+          // Check & generate suggested keywords after search
+          postSearchKeywordCheck();
         }
       }
     }
@@ -2302,6 +2710,8 @@ function toggleSidebar() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadSites();
+// Load suggested keywords on page start (will show empty if none cached)
+setTimeout(() => loadSuggestedKeywords(), 500);
 </script>
 </body>
 </html>

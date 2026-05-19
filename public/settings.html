@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — newsLookup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Design system ──────────────────────────────────────────────── */
+  :root {
+    --bg:        #0e0f11;
+    --surface:   #16181c;
+    --border:    #2a2d34;
+    --border2:   #383c46;
+    --text:      #d4d8e2;
+    --muted:     #6b7280;
+    --accent:    #4ade80;
+    --accent-dim:#1a3d25;
+    --warn:      #f59e0b;
+    --danger:    #f87171;
+    --radius:    6px;
+    --mono:      "IBM Plex Mono", monospace;
+    --sans:      "IBM Plex Sans", sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .topbar-brand {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+  .topbar-sep { color: var(--border2); }
+  .topbar-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .topbar-nav {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+  }
+  .topbar-nav a {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: color .15s, border-color .15s;
+  }
+  .topbar-nav a:hover { color: var(--text); border-color: var(--border2); }
+
+  .main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 40px 28px 80px;
+  }
+
+  .page-header {
+    margin-bottom: 36px;
+  }
+  .page-header h1 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .page-header p {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ── Status bar ─────────────────────────────────────────────────── */
+  .status-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-bottom: 28px;
+    border: 1px solid transparent;
+  }
+  .status-bar.show { display: flex; }
+  .status-bar.ok   { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .status-bar.err  { background: #2d1515; border-color: var(--danger); color: var(--danger); }
+  .status-bar .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  /* ── Domain cards ───────────────────────────────────────────────── */
+  .domain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .domain-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .domain-header:hover { background: rgba(255,255,255,.02); }
+  .domain-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .domain-icon.collection { background: #1a3d25; }
+  .domain-icon.search     { background: #1a2d3d; }
+  .domain-icon.rss        { background: #2d2a1a; }
+  .domain-icon.keywords   { background: #2d1a2d; }
+  .domain-label {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+  .domain-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding: 2px 8px;
+    background: var(--bg);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+  .domain-chevron {
+    color: var(--muted);
+    font-size: 10px;
+    transition: transform .2s;
+  }
+  .domain-card.open .domain-chevron { transform: rotate(90deg); }
+  .domain-body {
+    display: none;
+  }
+  .domain-card.open .domain-body { display: block; }
+
+  /* ── Setting rows ───────────────────────────────────────────────── */
+  .setting-row {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    align-items: start;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+
+  .setting-meta { min-width: 0; }
+  .setting-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .setting-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .setting-path {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--border2);
+    margin-top: 4px;
+  }
+
+  .setting-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    padding-right: 4px;
+  }
+
+  /* Integer / float — slider + number combo */
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 210px;
+  }
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 3px;
+    background: var(--border2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .num-input {
+    width: 68px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 4px 10px 4px 10px;
+    border-radius: var(--radius);
+    text-align: right;
+    outline: none;
+    transition: border-color .15s;
+    margin-left: 6px;
+  }
+  .num-input:focus { border-color: var(--accent); }
+  .unit-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Boolean toggle */
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border2);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--accent); }
+  .toggle-track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+  }
+  .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
+  /* Save button per row */
+  .save-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .save-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .save-btn.saved {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .save-btn.error {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: #2d1515;
+  }
+
+  /* ── Footer actions ─────────────────────────────────────────────── */
+  .footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 18px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all .15s;
+  }
+  .btn-ghost { background: transparent; color: var(--muted); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+  .btn-danger:hover { background: #2d1515; }
+  .last-updated {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--border2);
+  }
+
+  /* ── Loading skeleton ───────────────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 4px;
+    height: 14px;
+    margin-bottom: 6px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="/" class="topbar-brand">newsLookup</a>
+  <span class="topbar-sep">/</span>
+  <span class="topbar-title">settings</span>
+  <div class="topbar-nav">
+    <a href="/">Search</a>
+    <a href="/collection">Collection</a>
+  </div>
+</nav>
+
+<main class="main">
+
+  <div class="page-header">
+    <h1>App Settings</h1>
+    <p>Runtime configuration — all values are stored in <code style="font-family:var(--mono);font-size:11px;color:var(--accent)">config/app-settings.json</code> and take effect immediately.</p>
+  </div>
+
+  <div id="statusBar" class="status-bar">
+    <span class="dot"></span>
+    <span id="statusMsg"></span>
+  </div>
+
+  <div id="settingsContainer">
+    <!-- populated by JS -->
+    <div class="domain-card">
+      <div class="domain-header">
+        <div class="skeleton" style="width:28px;height:28px;border-radius:5px;flex-shrink:0"></div>
+        <div style="flex:1"><div class="skeleton" style="width:120px"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-actions">
+    <button class="btn btn-ghost" onclick="loadAll()">↺ Reload</button>
+    <button class="btn btn-danger" onclick="confirmReset()">Reset all to defaults</button>
+    <span class="last-updated" id="lastUpdated"></span>
+  </div>
+
+</main>
+
+<script>
+// ── Domain display metadata ──────────────────────────────────────────────────
+const DOMAIN_META = {
+  collection: { icon: "🗂", label: "My Clippings",                  cls: "collection" },
+  search:     { icon: "🔍", label: "newsLookup - Search",           cls: "search"     },
+  rss:        { icon: "📡", label: "newsLookup - RSS Feeds",        cls: "rss"        },
+  keywords:   { icon: "💡", label: "newsLookup - Keyword Suggestions", cls: "keywords" },
+};
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+function showStatus(msg, isError = false) {
+  const bar = document.getElementById("statusBar");
+  const txt = document.getElementById("statusMsg");
+  bar.className = "status-bar show " + (isError ? "err" : "ok");
+  txt.textContent = msg;
+  if (!isError) setTimeout(() => bar.classList.remove("show"), 3000);
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return isNaN(d) ? "" : d.toLocaleString();
+}
+
+// ── Render helpers ───────────────────────────────────────────────────────────
+function buildControl(item) {
+  const { dotPath, type, currentValue, min, max, step, unit } = item;
+  const safeId = dotPath.replace(/\./g, "_");
+
+  if (type === "boolean") {
+    return `
+      <label class="toggle" title="${dotPath}">
+        <input type="checkbox" id="${safeId}" ${currentValue ? "checked" : ""}
+               onchange="saveSetting('${dotPath}', this.checked)">
+        <span class="toggle-track"></span>
+      </label>`;
+  }
+
+  // integer / float — slider + number input
+  const sliderMin  = min  !== undefined ? min  : 0;
+  const sliderMax  = max  !== undefined ? max  : 100;
+  const sliderStep = step !== undefined ? step : (type === "float" ? 0.01 : 1);
+  const unitHtml   = unit ? `<span class="unit-label">${unit}</span>` : "";
+
+  return `
+    <div class="slider-wrap">
+      <input type="range"
+             id="${safeId}_range"
+             min="${sliderMin}" max="${sliderMax}" step="${sliderStep}"
+             value="${currentValue}"
+             oninput="syncNum('${safeId}', this.value)">
+      <input type="number"
+             id="${safeId}_num"
+             class="num-input"
+             min="${sliderMin}" max="${sliderMax}" step="${sliderStep}"
+             value="${currentValue}"
+             oninput="syncRange('${safeId}', this.value)">
+      ${unitHtml}
+    </div>
+    <button class="save-btn" id="${safeId}_btn"
+            onclick="saveFromInput('${dotPath}', '${safeId}', '${type}')">
+      save
+    </button>`;
+}
+
+function syncNum(safeId, val) {
+  const numEl = document.getElementById(safeId + "_num");
+  if (numEl) numEl.value = val;
+}
+function syncRange(safeId, val) {
+  const rangeEl = document.getElementById(safeId + "_range");
+  if (rangeEl) rangeEl.value = val;
+}
+
+function buildSettingRow(item) {
+  return `
+    <div class="setting-row">
+      <div class="setting-meta">
+        <div class="setting-label">${item.label || item.key}</div>
+        <div class="setting-desc">${item.description || ""}</div>
+        <div class="setting-path">${item.dotPath}</div>
+      </div>
+      <div class="setting-control">
+        ${buildControl(item)}
+      </div>
+    </div>`;
+}
+
+function buildDomainCard(domain, items, openByDefault) {
+  const dm    = DOMAIN_META[domain] || { icon: "⚙️", label: domain, cls: "" };
+  const open  = openByDefault ? " open" : "";
+  return `
+    <div class="domain-card${open}" id="card_${domain}">
+      <div class="domain-header" onclick="toggleCard('${domain}')">
+        <div class="domain-icon ${dm.cls}">${dm.icon}</div>
+        <span class="domain-label">${dm.label}</span>
+        <span class="domain-count">${items.length} setting${items.length !== 1 ? "s" : ""}</span>
+        <span class="domain-chevron">▶</span>
+      </div>
+      <div class="domain-body">
+        ${items.map(buildSettingRow).join("")}
+      </div>
+    </div>`;
+}
+
+// ── Toggle card open/closed ──────────────────────────────────────────────────
+function toggleCard(domain) {
+  document.getElementById("card_" + domain).classList.toggle("open");
+}
+
+// ── Load settings + schema from API ─────────────────────────────────────────
+async function loadAll() {
+  try {
+    const [schemaRes, settingsRes] = await Promise.all([
+      fetch("/api/settings/schema"),
+      fetch("/api/settings"),
+    ]);
+    const schema   = await schemaRes.json();
+    const settings = await settingsRes.json();
+
+    // Group schema items by domain, injecting current values from settings
+    // Hidden items (hidden: true in _meta) are filtered out of the UI entirely
+    const byDomain = {};
+    for (const item of schema) {
+      if (item.hidden) continue;
+      const domainVal = settings[item.domain];
+      item.currentValue = domainVal !== undefined ? domainVal[item.key] : item.currentValue;
+      if (!byDomain[item.domain]) byDomain[item.domain] = [];
+      byDomain[item.domain].push(item);
+    }
+
+    const container = document.getElementById("settingsContainer");
+    const domains   = Object.keys(byDomain);
+    container.innerHTML = domains
+      .map((d, i) => buildDomainCard(d, byDomain[d], i === 0))
+      .join("");
+
+    const lastUpdated = document.getElementById("lastUpdated");
+    if (settings.updatedAt) {
+      lastUpdated.textContent = "Last saved: " + formatDate(settings.updatedAt);
+    }
+  } catch (err) {
+    showStatus("Failed to load settings: " + err.message, true);
+  }
+}
+
+// ── Save a boolean toggle immediately ────────────────────────────────────────
+async function saveSetting(dotPath, value) {
+  const [domain, key] = dotPath.split(".");
+  try {
+    const res  = await fetch(`/api/settings/${domain}`, {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ [key]: value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unknown error");
+    showStatus(`Saved: ${dotPath} = ${value}`);
+    if (data.settings?.updatedAt) {
+      document.getElementById("lastUpdated").textContent =
+        "Last saved: " + formatDate(data.settings.updatedAt);
+    }
+  } catch (err) {
+    showStatus("Save failed: " + err.message, true);
+  }
+}
+
+// ── Save a numeric input via the save button ──────────────────────────────────
+async function saveFromInput(dotPath, safeId, type) {
+  const numEl = document.getElementById(safeId + "_num");
+  if (!numEl) return;
+  const raw   = numEl.value;
+  const value = type === "float" ? parseFloat(raw) : parseInt(raw, 10);
+  if (isNaN(value)) {
+    showStatus("Invalid value", true);
+    return;
+  }
+
+  const [domain, key] = dotPath.split(".");
+  const btn = document.getElementById(safeId + "_btn");
+
+  try {
+    const res  = await fetch(`/api/settings/${domain}`, {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ [key]: value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unknown error");
+
+    showStatus(`Saved: ${dotPath} = ${value}`);
+    if (btn) { btn.textContent = "saved ✓"; btn.classList.add("saved"); setTimeout(() => { btn.textContent = "save"; btn.classList.remove("saved"); }, 2000); }
+    if (data.settings?.updatedAt) {
+      document.getElementById("lastUpdated").textContent =
+        "Last saved: " + formatDate(data.settings.updatedAt);
+    }
+  } catch (err) {
+    showStatus("Save failed: " + err.message, true);
+    if (btn) { btn.textContent = "error"; btn.classList.add("error"); setTimeout(() => { btn.textContent = "save"; btn.classList.remove("error"); }, 3000); }
+  }
+}
+
+// ── Reset all to defaults ─────────────────────────────────────────────────────
+async function confirmReset() {
+  if (!confirm("Reset ALL settings to defaults? This cannot be undone.")) return;
+  try {
+    const res  = await fetch("/api/settings/reset", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unknown error");
+    showStatus("All settings reset to defaults.");
+    await loadAll();
+  } catch (err) {
+    showStatus("Reset failed: " + err.message, true);
+  }
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>

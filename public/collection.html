@@ -10,6 +10,7 @@
     --bg:      #0d0f12; --bg2: #13161b; --bg3: #1a1e26;
     --border:  #2a2f3d; --accent: #4ade80; --accent2: #22d3ee;
     --warn:    #fbbf24; --text: #e2e8f0; --muted: #64748b; --danger: #f87171;
+    --tag-bg:  #2a2008; --tag-border: #92400e; --tag-color: #fbbf24;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans',sans-serif; font-size: 14px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -108,12 +109,132 @@
   .col-meta { padding: 0 14px 6px; display: flex; gap: 6px; flex-wrap: wrap; }
   .col-badge { font-family: 'IBM Plex Mono',monospace; font-size: 10px; padding: 2px 7px; border-radius: 10px; border: 1px solid var(--border); color: var(--muted); }
   .col-badge.source { border-color: var(--accent2); color: var(--accent2); }
-  .col-summary { padding: 6px 14px 10px; font-size: 12px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); display: none; }
+
+  /* Tag badges on cards */
+  .col-badge.tag {
+    border-color: var(--tag-border); color: var(--tag-color);
+    background: var(--tag-bg); cursor: default;
+  }
+
+  .col-summary { padding: 8px 14px 12px; font-size: 13px; color: var(--text); line-height: 1.6; border-top: 1px solid var(--border); display: none; }
   .col-summary.open { display: block; }
+  .col-summary-point { display: flex; gap: 10px; padding: 5px 0; font-weight: 600; align-items: flex-start; }
+  .col-summary-point::before { content: '▶'; font-size: 9px; color: var(--accent2); margin-top: 4px; flex-shrink: 0; }
   .col-actions { padding: 6px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
   .col-btn { font-family: 'IBM Plex Mono',monospace; font-size: 11px; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; transition: all 0.15s; }
   .col-btn:hover { border-color: var(--accent2); color: var(--accent2); }
   .col-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+  .col-btn.tag-active { border-color: var(--tag-border); color: var(--tag-color); }
+
+  /* Inline tag editor */
+  .tag-editor {
+    padding: 8px 14px 10px;
+    border-top: 1px solid var(--border);
+    background: var(--bg3);
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tag-editor.open { display: flex; }
+  .tag-editor-chips { display: flex; gap: 5px; flex-wrap: wrap; min-height: 22px; }
+  .tag-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: 'IBM Plex Mono',monospace; font-size: 10px;
+    padding: 2px 6px 2px 8px; border-radius: 10px;
+    background: var(--tag-bg); border: 1px solid var(--tag-border); color: var(--tag-color);
+  }
+  .tag-chip-remove {
+    background: none; border: none; color: var(--tag-color);
+    cursor: pointer; font-size: 11px; padding: 0; line-height: 1;
+    opacity: 0.7; transition: opacity 0.1s;
+  }
+  .tag-chip-remove:hover { opacity: 1; }
+  .tag-editor-row { display: flex; gap: 6px; align-items: center; position: relative; }
+  .tag-input {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 5px; color: var(--text); font-family: 'IBM Plex Mono',monospace;
+    font-size: 11px; padding: 4px 8px; outline: none; transition: border-color 0.15s;
+  }
+  .tag-input:focus { border-color: var(--tag-border); }
+  .tag-input::placeholder { color: var(--muted); }
+  .tag-save-btn {
+    font-family: 'IBM Plex Mono',monospace; font-size: 11px;
+    padding: 4px 10px; border-radius: 4px; border: 1px solid var(--accent);
+    background: none; color: var(--accent); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .tag-save-btn:hover { background: #0f2a1a; }
+  .tag-save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Suggest tags button */
+  .tag-suggest-btn {
+    font-family: 'IBM Plex Mono',monospace; font-size: 11px;
+    padding: 4px 10px; border-radius: 4px; border: 1px solid var(--accent2);
+    background: none; color: var(--accent2); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .tag-suggest-btn:hover { background: #0a1a22; }
+  .tag-suggest-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tag-suggest-hint {
+    font-family: 'IBM Plex Mono',monospace; font-size: 10px;
+    color: var(--muted); padding: 2px 0;
+  }
+
+  /* Tag autocomplete dropdown */
+  .tag-autocomplete {
+    position: absolute; top: calc(100% + 3px); left: 0; right: 0;
+    background: var(--bg2); border: 1px solid var(--tag-border);
+    border-radius: 5px; z-index: 100; max-height: 140px; overflow-y: auto;
+    display: none;
+  }
+  .tag-autocomplete.open { display: block; }
+  .tag-ac-item {
+    font-family: 'IBM Plex Mono',monospace; font-size: 11px;
+    padding: 5px 10px; cursor: pointer; color: var(--tag-color);
+    transition: background 0.1s;
+  }
+  .tag-ac-item:hover { background: var(--tag-bg); }
+
+  /* ── Tag filter section in left panel ── */
+  .tag-filter-chips { display: flex; gap: 5px; flex-wrap: wrap; min-height: 20px; }
+  .tag-filter-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: 'IBM Plex Mono',monospace; font-size: 10px;
+    padding: 2px 6px 2px 8px; border-radius: 10px;
+    background: var(--tag-bg); border: 1px solid var(--tag-border); color: var(--tag-color);
+  }
+  .tag-filter-chip-remove {
+    background: none; border: none; color: var(--tag-color);
+    cursor: pointer; font-size: 11px; padding: 0; line-height: 1; opacity: 0.7;
+  }
+  .tag-filter-chip-remove:hover { opacity: 1; }
+  .tag-mode-row { display: flex; gap: 5px; }
+  .tag-mode-btn {
+    font-family: 'IBM Plex Mono',monospace; font-size: 10px;
+    padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border);
+    background: none; color: var(--muted); cursor: pointer; transition: all 0.12s; flex: 1;
+  }
+  .tag-mode-btn.active {
+    border-color: var(--tag-border); color: var(--tag-color); background: var(--tag-bg);
+  }
+  .tag-filter-input-wrap { position: relative; }
+  .tag-filter-input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 11px; padding: 5px 8px;
+    outline: none; font-family: 'IBM Plex Mono',monospace; transition: border-color 0.15s;
+  }
+  .tag-filter-input:focus { border-color: var(--tag-border); }
+  .tag-filter-input::placeholder { color: var(--muted); }
+  .tag-filter-autocomplete {
+    position: absolute; top: calc(100% + 3px); left: 0; right: 0;
+    background: var(--bg2); border: 1px solid var(--tag-border);
+    border-radius: 5px; z-index: 100; max-height: 130px; overflow-y: auto;
+    display: none;
+  }
+  .tag-filter-autocomplete.open { display: block; }
+  .tag-filter-ac-item {
+    font-family: 'IBM Plex Mono',monospace; font-size: 11px;
+    padding: 5px 10px; cursor: pointer; color: var(--tag-color); transition: background 0.1s;
+  }
+  .tag-filter-ac-item:hover { background: var(--tag-bg); }
 
   /* Similarity slider */
   .sim-bar { display: flex; align-items: center; gap: 8px; }
@@ -165,6 +286,7 @@
     .col-meta { padding: 0 10px 6px; }
     .col-actions { padding: 6px 10px; }
     .col-summary { padding: 6px 10px 10px; }
+    .tag-editor { padding: 8px 10px 10px; }
     .search-input { font-size: 16px; }
     .filter-input { font-size: 16px; }
     .filter-select { font-size: 16px; }
@@ -203,13 +325,12 @@
       </div>
 
       <div class="filter-section">
-        <div class="filter-label">📅 Date</div>
-        <select class="filter-select" id="dateFilter" onchange="loadAll()">
-          <option value="all">All time</option>
-          <option value="today">Today</option>
-          <option value="week">This week</option>
-          <option value="month">This month</option>
-        </select>
+        <div class="filter-label">📅 Published Date</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="date" class="filter-input" id="dateFrom" oninput="loadAll()" style="flex:1;padding:5px 8px"/>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">–</span>
+          <input type="date" class="filter-input" id="dateTo" oninput="loadAll()" style="flex:1;padding:5px 8px"/>
+        </div>
       </div>
 
       <div class="filter-section">
@@ -223,6 +344,31 @@
         <div class="filter-label">📰 Source</div>
         <input class="filter-input" id="sourceFilter" placeholder="e.g. SCMP" oninput="loadAll()"/>
       </div>
+
+      <!-- ── TAG FILTER ── -->
+      <div class="filter-section">
+        <div class="filter-label">🏷 Tags</div>
+
+        <!-- ANY / ALL toggle -->
+        <div class="tag-mode-row">
+          <button class="tag-mode-btn active" id="tagModeAny" onclick="setTagMode('any')" title="Match items that have ANY of the selected tags">ANY</button>
+          <button class="tag-mode-btn"        id="tagModeAll" onclick="setTagMode('all')" title="Match items that have ALL of the selected tags">ALL</button>
+        </div>
+
+        <!-- Active filter chips -->
+        <div class="tag-filter-chips" id="tagFilterChips"></div>
+
+        <!-- Input + autocomplete -->
+        <div class="tag-filter-input-wrap">
+          <input class="tag-filter-input" id="tagFilterInput"
+            placeholder="Type tag, press Enter…"
+            oninput="onTagFilterInput()"
+            onkeydown="onTagFilterKeydown(event)"
+            autocomplete="off"/>
+          <div class="tag-filter-autocomplete" id="tagFilterAC"></div>
+        </div>
+      </div>
+      <!-- ── END TAG FILTER ── -->
 
       <div class="topn-row">
         <label>Show top:</label>
@@ -285,9 +431,7 @@ let minSimilarity = 40;
 function updateSim(val) {
   minSimilarity = parseInt(val);
   document.getElementById('simVal').textContent = val + '%';
-  // re-render with new threshold
   if (currentMode === 'search') {
-    // re-filter already scored items
     const filtered = lastSearchResults.filter(i => (i.searchScore || 0) >= minSimilarity);
     renderItems(filtered, true);
   } else {
@@ -295,14 +439,101 @@ function updateSim(val) {
   }
 }
 
-let lastSearchResults = []; // keep last AI search results for re-filtering
+let lastSearchResults = [];
+
+// ── Tag filter state ─────────────────────────────────────────────────────────
+let activeTagFilters = []; // array of lowercase tag strings
+let tagFilterMode    = 'any'; // 'any' | 'all'
+
+function setTagMode(mode) {
+  tagFilterMode = mode;
+  document.getElementById('tagModeAny').classList.toggle('active', mode === 'any');
+  document.getElementById('tagModeAll').classList.toggle('active', mode === 'all');
+  renderItems(filterItems(allItems));
+}
+
+function addTagFilter(tag) {
+  const t = tag.trim().toLowerCase();
+  if (!t || activeTagFilters.includes(t)) return;
+  activeTagFilters.push(t);
+  renderTagFilterChips();
+  document.getElementById('tagFilterInput').value = '';
+  closeTagFilterAC();
+  renderItems(filterItems(allItems));
+}
+
+function removeTagFilter(tag) {
+  activeTagFilters = activeTagFilters.filter(t => t !== tag);
+  renderTagFilterChips();
+  renderItems(filterItems(allItems));
+}
+
+function renderTagFilterChips() {
+  const wrap = document.getElementById('tagFilterChips');
+  wrap.innerHTML = activeTagFilters.map(t =>
+    `<span class="tag-filter-chip">
+      ${esc(t)}
+      <button class="tag-filter-chip-remove" onclick="removeTagFilter('${esc(t)}')" title="Remove">✕</button>
+    </span>`
+  ).join('');
+}
+
+// ── Tag filter autocomplete ──────────────────────────────────────────────────
+function getAllTagsFromItems() {
+  const set = new Set();
+  allItems.forEach(item => {
+    if (item.tags) {
+      item.tags.split(',').forEach(t => {
+        const trimmed = t.trim().toLowerCase();
+        if (trimmed) set.add(trimmed);
+      });
+    }
+  });
+  return [...set].sort();
+}
+
+function onTagFilterInput() {
+  const val = document.getElementById('tagFilterInput').value.trim().toLowerCase();
+  const all = getAllTagsFromItems();
+  const matches = all.filter(t => t.includes(val) && !activeTagFilters.includes(t));
+
+  const ac = document.getElementById('tagFilterAC');
+  if (!val || !matches.length) { closeTagFilterAC(); return; }
+
+  ac.innerHTML = matches.slice(0, 8).map(t =>
+    `<div class="tag-filter-ac-item" onmousedown="addTagFilter('${esc(t)}')">${esc(t)}</div>`
+  ).join('');
+  ac.classList.add('open');
+}
+
+function onTagFilterKeydown(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = document.getElementById('tagFilterInput').value.trim();
+    if (val) addTagFilter(val);
+  }
+  if (e.key === 'Escape') closeTagFilterAC();
+}
+
+function closeTagFilterAC() {
+  document.getElementById('tagFilterAC').classList.remove('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tag-filter-input-wrap')) closeTagFilterAC();
+});
 
 // ── Load all items ────────────────────────────────────────────────────────────
 async function loadAll() {
   currentMode = 'all';
   document.getElementById('modeLabel').textContent = '';
   try {
-    const res   = await fetch('/api/collection');
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo   = document.getElementById('dateTo').value;
+    const params   = new URLSearchParams();
+    if (dateFrom) params.set('dateFrom', dateFrom);
+    if (dateTo)   params.set('dateTo',   dateTo);
+    const res   = await fetch('/api/collection?' + params.toString());
     const data  = await res.json();
     allItems = data.items || [];
 
@@ -321,24 +552,36 @@ async function loadAll() {
   }
 }
 
+// ── Filter (extended with tag filter) ────────────────────────────────────────
 function filterItems(items) {
-  const date   = document.getElementById('dateFilter').value;
   const region = document.getElementById('regionFilter').value;
   const source = document.getElementById('sourceFilter').value.toLowerCase().trim();
   const topN   = parseInt(document.getElementById('topN').value);
-  const now    = new Date();
 
   return items.filter(item => {
+    // region
     if (region && item.region !== region) return false;
+    // source
     if (source && !item.source?.toLowerCase().includes(source)) return false;
-    if (date !== 'all') {
-      const d = new Date(item.savedAt);
-      if (isNaN(d)) return false;
-      const days = (now - d) / 86400000;
-      if (date === 'today' && days > 1)  return false;
-      if (date === 'week'  && days > 7)  return false;
-      if (date === 'month' && days > 30) return false;
+
+    // ── tag filter ──
+    if (activeTagFilters.length > 0) {
+      // parse item's tags into a lowercase set
+      const itemTags = item.tags
+        ? item.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
+        : [];
+
+      if (tagFilterMode === 'any') {
+        // item must have at least one of the selected tags
+        const hasAny = activeTagFilters.some(ft => itemTags.includes(ft));
+        if (!hasAny) return false;
+      } else {
+        // 'all' — item must have every selected tag
+        const hasAll = activeTagFilters.every(ft => itemTags.includes(ft));
+        if (!hasAll) return false;
+      }
     }
+
     return true;
   }).slice(0, topN);
 }
@@ -386,14 +629,25 @@ function renderItems(items, isSearch = false) {
     return;
   }
 
-  body.innerHTML = items.map((item, i) => {
-    // Only show score during AI search — with clear label
+  body.innerHTML = items.map((item) => {
     const scoreLabel = isSearch && item.searchScore
       ? `<span class="col-score" title="Similarity to your query">${item.searchScore}% match</span>`
       : '';
-    const savedDate = item.savedAt ? new Date(item.savedAt).toLocaleString() : '';
-    const pubDate   = item.pubDate ? fmtDate(item.pubDate) : '';
+    const savedDate  = item.savedAt ? new Date(item.savedAt).toLocaleString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false
+    }) : '';
+    const pubDate    = item.pubDate ? fmtDate(item.pubDate) : '';
     const hasSummary = item.summary && item.summary.trim().length > 0;
+
+    // tag badges for display in meta row
+    const tagBadges = item.tags
+      ? item.tags.split(',').map(t => t.trim()).filter(Boolean)
+          .map(t => `<span class="col-badge tag">🏷 ${esc(t)}</span>`).join('')
+      : '';
+
+    // existing tags as chips for the inline editor (pre-populated)
+    const editorChipsHtml = buildEditorChipsHtml(item.id, item.tags || '');
 
     return `<div class="col-card" id="card_${item.id}">
       <div class="col-card-header">
@@ -402,23 +656,253 @@ function renderItems(items, isSearch = false) {
           <a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.title)}</a>
         </div>
       </div>
-      <div class="col-meta">
+      <div class="col-meta" id="meta_${item.id}">
         <span class="col-badge source">${esc(item.source||'')}</span>
         <span class="col-badge">${esc(item.region||'')}</span>
         ${pubDate ? `<span class="col-badge">${pubDate}</span>` : ''}
         <span class="col-badge">saved ${savedDate}</span>
+        ${tagBadges}
       </div>
-      ${hasSummary ? `<div class="col-summary" id="summary_${item.id}">${esc(item.summary)}</div>` : ''}
+      ${hasSummary ? `<div class="col-summary" id="summary_${item.id}">${parseSummary(item.summary).map(s=>`<div class="col-summary-point">${esc(s)}</div>`).join('')}</div>` : ''}
       <div class="col-actions">
         ${hasSummary
           ? `<button class="col-btn" onclick="toggleSummary(${item.id})">📝 Summary</button>`
           : `<button class="col-btn" id="sum_${item.id}" onclick="summariseClipping(${item.id},'${esc(item.url)}','${esc(item.title).replace(/'/g,"\\'")}')">🤖 Summarise</button>`}
+        <button class="col-btn${item.tags ? ' tag-active' : ''}" id="tagBtn_${item.id}" onclick="toggleTagEditor(${item.id})">🏷 Tags</button>
         <button class="col-btn del" onclick="deleteItem(${item.id})">✕ Remove</button>
+      </div>
+      <div class="tag-editor" id="tagEditor_${item.id}">
+        <div class="tag-editor-chips" id="editorChips_${item.id}">${editorChipsHtml}</div>
+        <button class="tag-suggest-btn" id="tagSuggestBtn_${item.id}" onclick="suggestTags(${item.id})">✨ Suggest Tags</button>
+        <div class="tag-suggest-hint" id="tagSuggestHint_${item.id}" style="display:none"></div>
+        <div class="tag-editor-row">
+          <input class="tag-input" id="tagInput_${item.id}"
+            placeholder="Add tag, press Enter or comma…"
+            oninput="onTagEditorInput(${item.id})"
+            onkeydown="onTagEditorKeydown(event,${item.id})"
+            autocomplete="off"/>
+          <button class="tag-save-btn" id="tagSaveBtn_${item.id}" onclick="saveTags(${item.id})">💾 Save</button>
+          <div class="tag-autocomplete" id="tagAC_${item.id}"></div>
+        </div>
       </div>
     </div>`;
   }).join('');
 }
 
+// ── Tag editor helpers ────────────────────────────────────────────────────────
+
+// In-memory draft tags per card (itemId → string[])
+const draftTags = {};
+
+function buildEditorChipsHtml(itemId, tagsStr) {
+  // initialise draft from current DB value
+  const tags = tagsStr
+    ? tagsStr.split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+  draftTags[itemId] = [...tags]; // seed draft
+  return tags.map(t => chipHtml(itemId, t)).join('');
+}
+
+function chipHtml(itemId, tag) {
+  return `<span class="tag-chip" id="chip_${itemId}_${esc(tag)}">
+    ${esc(tag)}
+    <button class="tag-chip-remove" onclick="removeDraftTag(${itemId},'${esc(tag)}')" title="Remove tag">✕</button>
+  </span>`;
+}
+
+function toggleTagEditor(itemId) {
+  const editor = document.getElementById(`tagEditor_${itemId}`);
+  const btn    = document.getElementById(`tagBtn_${itemId}`);
+  const isOpen = editor.classList.toggle('open');
+  btn.classList.toggle('tag-active', isOpen);
+  if (isOpen) {
+    setTimeout(() => document.getElementById(`tagInput_${itemId}`)?.focus(), 50);
+  }
+}
+
+function removeDraftTag(itemId, tag) {
+  if (!draftTags[itemId]) return;
+  draftTags[itemId] = draftTags[itemId].filter(t => t !== tag);
+  reRenderEditorChips(itemId);
+}
+
+function reRenderEditorChips(itemId) {
+  const wrap = document.getElementById(`editorChips_${itemId}`);
+  if (wrap) wrap.innerHTML = (draftTags[itemId] || []).map(t => chipHtml(itemId, t)).join('');
+}
+
+function addDraftTag(itemId, tag) {
+  const t = tag.trim();
+  if (!t) return;
+  if (!draftTags[itemId]) draftTags[itemId] = [];
+  if (!draftTags[itemId].includes(t)) {
+    draftTags[itemId].push(t);
+    reRenderEditorChips(itemId);
+  }
+  const inp = document.getElementById(`tagInput_${itemId}`);
+  if (inp) inp.value = '';
+  closeTagAC(itemId);
+}
+
+function onTagEditorKeydown(e, itemId) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = document.getElementById(`tagInput_${itemId}`)?.value.trim();
+    if (val) addDraftTag(itemId, val);
+  }
+  if (e.key === 'Escape') closeTagAC(itemId);
+}
+
+function onTagEditorInput(itemId) {
+  const val     = document.getElementById(`tagInput_${itemId}`)?.value.trim().toLowerCase();
+  const allTags = getAllTagsFromItems();
+  const current = draftTags[itemId] || [];
+  const matches = allTags.filter(t =>
+    val && t.toLowerCase().includes(val) && !current.map(c => c.toLowerCase()).includes(t)
+  );
+
+  const ac = document.getElementById(`tagAC_${itemId}`);
+  if (!ac) return;
+  if (!val || !matches.length) { closeTagAC(itemId); return; }
+
+  ac.innerHTML = matches.slice(0, 6).map(t =>
+    `<div class="tag-ac-item" onmousedown="addDraftTag(${itemId},'${esc(t)}')">${esc(t)}</div>`
+  ).join('');
+  ac.classList.add('open');
+}
+
+function closeTagAC(itemId) {
+  document.getElementById(`tagAC_${itemId}`)?.classList.remove('open');
+}
+
+// ── AI Tag Suggestion ─────────────────────────────────────────────────────────
+async function suggestTags(itemId) {
+  const btn    = document.getElementById(`tagSuggestBtn_${itemId}`);
+  const hintEl = document.getElementById(`tagSuggestHint_${itemId}`);
+
+  const item = allItems.find(i => i.id === itemId);
+  if (!item) return;
+
+  btn.disabled    = true;
+  btn.textContent = '⏳ Thinking…';
+  hintEl.style.display = 'none';
+
+  const existingTags = (draftTags[itemId] || []).join(', ');
+
+  try {
+    const res = await fetch('/api/collection/suggest-tags', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title:        item.title,
+        summary:      item.summary  || '',
+        source:       item.source   || '',
+        region:       item.region   || '',
+        existingTags: existingTags,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Server error');
+
+    const suggestions = data.suggestions || [];
+
+    // filter out tags already in draft (safety check)
+    const current  = (draftTags[itemId] || []).map(t => t.toLowerCase());
+    const filtered = suggestions.filter(s => !current.includes(s.tag.toLowerCase()));
+
+    if (!filtered.length) {
+      hintEl.textContent   = '✓ No new tags to suggest (all relevant tags already present or below 85% confidence)';
+      hintEl.style.display = 'block';
+      btn.disabled    = false;
+      btn.textContent = '✨ Suggest Tags';
+      return;
+    }
+
+    // add as draft chips
+    filtered.forEach(s => {
+      if (!draftTags[itemId]) draftTags[itemId] = [];
+      if (!draftTags[itemId].includes(s.tag)) draftTags[itemId].push(s.tag);
+    });
+    reRenderEditorChips(itemId);
+
+    hintEl.textContent   = `✨ Added ${filtered.length} tag${filtered.length !== 1 ? 's' : ''}: ${filtered.map(s => s.tag + ' (' + s.score + '%)').join(', ')} — click 💾 Save to apply`;
+    hintEl.style.display = 'block';
+
+    btn.disabled    = false;
+    btn.textContent = '✨ Suggest Tags';
+
+  } catch (err) {
+    hintEl.textContent   = '❌ Suggestion failed: ' + err.message;
+    hintEl.style.display = 'block';
+    btn.disabled    = false;
+    btn.textContent = '✨ Suggest Tags';
+    console.error('suggestTags error:', err);
+  }
+}
+
+// ── Save tags to server ───────────────────────────────────────────────────────
+async function saveTags(itemId) {
+  const btn      = document.getElementById(`tagSaveBtn_${itemId}`);
+  const tags     = (draftTags[itemId] || []).join(', ');
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+  try {
+    const res = await fetch(`/api/collection/${itemId}/tags`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ tags }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Save failed');
+
+    // update allItems in memory
+    const idx = allItems.findIndex(i => i.id === itemId);
+    if (idx !== -1) allItems[idx].tags = data.tags || '';
+
+    // refresh meta row tag badges
+    refreshMetaTags(itemId, data.tags || '');
+
+    // update Tags button styling
+    const tagBtn = document.getElementById(`tagBtn_${itemId}`);
+    if (tagBtn) tagBtn.classList.toggle('tag-active', !!(data.tags));
+
+    if (btn) { btn.textContent = '✅ Saved'; btn.disabled = false; }
+    setTimeout(() => {
+      if (btn) btn.textContent = '💾 Save';
+      // close editor after save
+      const editor = document.getElementById(`tagEditor_${itemId}`);
+      if (editor) editor.classList.remove('open');
+    }, 1000);
+
+  } catch(err) {
+    if (btn) { btn.textContent = '❌ Error'; btn.disabled = false; }
+    setTimeout(() => { if (btn) btn.textContent = '💾 Save'; }, 2000);
+    console.error('Tag save error:', err.message);
+  }
+}
+
+// Refresh only the tag badges in the meta row — no full re-render
+function refreshMetaTags(itemId, tagsStr) {
+  const meta = document.getElementById(`meta_${itemId}`);
+  if (!meta) return;
+
+  // remove existing tag badges
+  meta.querySelectorAll('.col-badge.tag').forEach(el => el.remove());
+
+  // append new ones
+  if (tagsStr) {
+    tagsStr.split(',').map(t => t.trim()).filter(Boolean).forEach(t => {
+      const span = document.createElement('span');
+      span.className = 'col-badge tag';
+      span.textContent = '🏷 ' + t;
+      meta.appendChild(span);
+    });
+  }
+}
+
+// ── Misc helpers ──────────────────────────────────────────────────────────────
 function toggleSummary(id) {
   const el = document.getElementById('summary_' + id);
   if (el) el.classList.toggle('open');
@@ -430,6 +914,7 @@ async function deleteItem(id) {
     await fetch('/api/collection/' + id, { method: 'DELETE' });
     document.getElementById('card_' + id)?.remove();
     allItems = allItems.filter(i => i.id !== id);
+    delete draftTags[id];
     updateTotal(allItems.length);
     document.getElementById('resultsCount').textContent =
       document.querySelectorAll('.col-card').length + ' items';
@@ -456,13 +941,30 @@ function showError(msg) {
 }
 
 function fmtDate(raw) {
+  if (!raw) return '';
   const d = new Date(raw);
-  if (isNaN(d)) return '';
-  const days = Math.floor((Date.now() - d) / 86400000);
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 30)  return days + 'd ago';
-  return Math.floor(days/30) + 'mo ago';
+  if (isNaN(d)) return String(raw).slice(0, 16); // show raw string if unparseable
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function parseSummary(raw) {
+  // Strip <think>...</think> blocks (qwen3 reasoning traces)
+  let clean = raw.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  // If content uses ▶/•/► as inline separators (not newlines), normalise to newlines first
+  if (/[▶▸►•]/.test(clean) && clean.split(/\r?\n/).length <= 2) {
+    clean = clean.replace(/[▶▸►•]/g, '\n');
+  }
+  const results = [];
+  for (const line of clean.split(/\r?\n/)) {
+    // Strip leading bullet chars: ▶ ▸ ► • - * or numbered 1. 2) etc, plus invisible chars
+    const stripped = line.replace(/^[\s\u200b\u00a0]*([▶▸►•\-\*]|\d+[\.\)])\s*/, '').trim();
+    const text = stripped || line.trim();
+    // Must have actual visible content (at least 3 real chars)
+    if (text.replace(/[\s\u200b\u00a0\r]/g, '').length >= 3) {
+      results.push(text);
+    }
+  }
+  return results;
 }
 
 function esc(s) {
@@ -486,7 +988,7 @@ async function summariseClipping(id, url, title) {
     if (data.error) throw new Error(data.error);
 
     // save summary back to DB
-    const saveRes = await fetch('/api/collection/summary', {
+    await fetch('/api/collection/summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, summary: data.summary }),
@@ -497,14 +999,15 @@ async function summariseClipping(id, url, title) {
     // show summary inline
     const card = document.getElementById('card_' + id);
     if (card) {
+      const fmtSummary = s => parseSummary(s).map(p=>`<div class="col-summary-point">${esc(p)}</div>`).join('');
       const existing = card.querySelector('.col-summary');
       if (existing) {
-        existing.textContent = data.summary;
+        existing.innerHTML = fmtSummary(data.summary);
         existing.classList.add('open');
       } else {
         const div = document.createElement('div');
         div.className = 'col-summary open';
-        div.textContent = data.summary;
+        div.innerHTML = fmtSummary(data.summary);
         card.querySelector('.col-actions').before(div);
       }
     }
@@ -544,15 +1047,13 @@ async function exportCollection() {
   try {
     const res  = await fetch('/api/collection');
     const data = await res.json();
-    let items  = data.items || data; // handle both {items:[]} and []
+    let items  = data.items || data;
 
     if (year) {
       items = items.filter(i => i.savedAt && new Date(i.savedAt).getFullYear() === parseInt(year));
     }
 
-    const filename = year
-      ? `collection-${year}.json`
-      : `collection-all.json`;
+    const filename = year ? `collection-${year}.json` : `collection-all.json`;
 
     const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
@@ -582,7 +1083,6 @@ async function importCollection(input) {
   const barEl      = document.getElementById('importProgressBar');
   const textEl     = document.getElementById('importProgressText');
 
-  // ── Parse file ──────────────────────────────────────────────────────────────
   let items;
   try {
     const text = await file.text();
@@ -593,7 +1093,6 @@ async function importCollection(input) {
     return;
   }
 
-  // ── Fetch existing URLs to skip duplicates ──────────────────────────────────
   let existingUrls = new Set();
   try {
     const res  = await fetch('/api/collection');
@@ -612,7 +1111,6 @@ async function importCollection(input) {
     return;
   }
 
-  // ── Phase 1: Insert all items ───────────────────────────────────────────────
   importBtn.disabled = true;
   progressEl.style.display = 'block';
   barEl.style.width = '0%';
@@ -620,11 +1118,11 @@ async function importCollection(input) {
 
   let imported = 0;
   let failed   = 0;
-  const importedItems = []; // track successfully inserted items for re-embed
+  const importedItems = [];
 
   for (let i = 0; i < toImport.length; i++) {
     const item = toImport[i];
-    const pct  = Math.round(((i + 1) / toImport.length) * 50); // phase 1 = 0–50%
+    const pct  = Math.round(((i + 1) / toImport.length) * 50);
     barEl.style.width = pct + '%';
     textEl.textContent = `Importing… ${i + 1} / ${toImport.length}`;
 
@@ -633,16 +1131,16 @@ async function importCollection(input) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          newsId:  item.newsId  || undefined,
-          url:     item.url,
-          title:   item.title,
-          summary: item.summary  || '',
-          score:   item.score    ?? null,
+          newsId:    item.newsId    || undefined,
+          url:       item.url,
+          title:     item.title,
+          summary:   item.summary   || '',
+          score:     item.score     ?? null,
           threshold: item.threshold ?? null,
-          source:  item.source   || '',
-          region:  item.region   || '',
-          pubDate: item.pubDate  || '',
-          tags:    item.tags     || null,
+          source:    item.source    || '',
+          region:    item.region    || '',
+          pubDate:   item.pubDate   || '',
+          tags:      item.tags      || null,
         }),
       });
       if (!res.ok) throw new Error();
@@ -653,7 +1151,6 @@ async function importCollection(input) {
     }
   }
 
-  // Refresh list so user can see items immediately
   loadAll();
 
   if (imported === 0) {
@@ -663,7 +1160,6 @@ async function importCollection(input) {
     return;
   }
 
-  // ── Phase 2: Re-embed imported items ───────────────────────────────────────
   textEl.textContent   = `✅ ${imported} imported — building search index…`;
   barEl.style.width    = '50%';
   barEl.style.background = 'var(--accent2)';
@@ -684,7 +1180,7 @@ async function importCollection(input) {
 async function checkUnembedded() {
   try {
     const res  = await fetch('/api/collection/unembedded');
-    if (!res.ok) return; // endpoint not available yet — silent fail
+    if (!res.ok) return;
     const data = await res.json();
     const items = data.items || [];
     if (items.length === 0) return;
@@ -694,7 +1190,7 @@ async function checkUnembedded() {
 
     await reEmbedItems(items);
   } catch {
-    // silent — don't bother user if endpoint doesn't exist
+    // silent
   }
 }
 
@@ -741,6 +1237,19 @@ async function reEmbedItems(items) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+(function setDefaultDateRange() {
+  const fmt = d => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const today = new Date();
+  const from  = new Date();
+  from.setDate(today.getDate() - 14);
+  document.getElementById('dateFrom').value = fmt(from);
+  document.getElementById('dateTo').value   = fmt(today);
+})();
 loadAll();
 checkUnembedded();
 </script>

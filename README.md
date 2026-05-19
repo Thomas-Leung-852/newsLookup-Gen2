@@ -1,3 +1,4 @@
+
 # 📡 newsLookup Gen2 — AI-Powered News Intelligence
 
 > Stop keyword-hunting. Start understanding your news.
@@ -35,18 +36,21 @@ Converts your query and every article title into high-dimensional vectors. Simil
 
 - **Semantic search** — `qwen3-embedding:8b` running 100% locally, free forever
 - **RAG summarisation** — `gpt-oss:120b-cloud` generates 3-bullet summaries with intelligent fallback
+- **AI keyword suggestions** — trending keywords auto-generated from today's headlines; click to search instantly
 - **Multilingual** — English, 繁體中文, Cantonese or mix all three in one query
 - **Intelligent caching** — RSS feeds (15 min TTL) + article vectors (permanent) = 2nd search in ~3 seconds
 - **Float32Array optimised** — handles 10,000 clipping records at ~50ms per search
 - **Date filters** — Today, Yesterday, This Week, 2 Weeks, Month, Year to Date, All
 - **Quick Scan** — browse Today / Yesterday / Week / All Time headlines before searching
 - **Drag-to-select** sites — hold and drag to select multiple sites instantly
-- **Similarity threshold** — auto-adjusted per query length, manual slider for fine-tuning
+- **Similarity threshold** — manual slider for fine-tuning (40%–90%)
 - **Search history** — session memory for prompt and threshold tuning
 - **✂️ My Clippings** — personal AI news archive with natural language vector search
+- **Clipping tags** — tag saved articles for grouping and fast filtered search; AI suggests tags automatically
 - **Summary cache** — summaries stored in SQLite, never regenerated for same article
 - **RSS Site Editor** — duplicate detector, live feed testing, staleness detection
-- **Export** — CSV and JSON with selectable results
+- **Export** — CSV and JSON with selectable results; full clipping export with tags
+- **Runtime settings** — all tuneable parameters managed via a settings UI, no restart needed
 - **Model profiles** — per-model parameters in hot-reloadable `model-profiles.json`
 - **Debug endpoint** — `/api/debug-embed` for testing similarity scores directly
 
@@ -197,7 +201,6 @@ Open your browser at `http://localhost:3000`
 | `AI_MODEL` | `gpt-oss:120b-cloud` | Reasoning model for RAG summaries |
 | `EMBED_MODEL` | `qwen3-embedding:8b` | Local embedding model for semantic search |
 | `EMBED_BASE_URL` | `http://localhost:11434` | Local Ollama URL for embedding |
-| `EMBED_THRESHOLD` | `0.40` | Default similarity threshold (0.0–1.0) |
 | `RSS_CACHE_TTL` | `900000` | RSS cache TTL in ms (default 15 mins) |
 | `PORT` | `3000` | HTTP server port |
 
@@ -212,11 +215,14 @@ newsLookup-Gen2/
 ├── model-profiles.json         # Per-model parameters — hot-reloaded, no restart
 ├── articles.db                 # SQLite — article history (auto-created)
 ├── collection.db               # SQLite — My Clippings + summary cache (auto-created)
+├── config/
+│   └── app-settings.json       # Runtime tuneable settings — persisted to disk
 ├── package.json
 └── public/
-    ├── index.html         # Main search UI
-    ├── editor.html        # RSS Site Editor
-    └── collection.html    # My Clippings
+    ├── index.html              # Main search UI
+    ├── editor.html             # RSS Site Editor
+    ├── settings.html           # App settings UI
+    └── collection.html         # My Clippings
 ```
 
 ---
@@ -250,15 +256,23 @@ newsLookup-Gen2/
 | `DELETE` | `/api/collection/:id` | Remove clipping |
 | `POST` | `/api/collection/search` | Vector search across clippings |
 | `POST` | `/api/collection/summary` | Update summary for clipping |
+| `GET` | `/api/suggested-keywords` | Get AI-generated trending keywords |
+| `POST` | `/api/suggested-keywords/generate` | Trigger keyword generation from headlines |
+| `GET` | `/api/settings` | Get all runtime settings |
+| `PATCH` | `/api/settings/:domain` | Update a settings domain |
 | `GET` | `/api/cache-status` | RSS + vector cache stats |
 | `POST` | `/api/cache-refresh` | Force RSS cache refresh |
 | `GET` | `/api/history?filter=&q=` | Query article history |
 
 ---
+
 ## 🗺️ Screenshot
 
-![](https://static.wixstatic.com/media/0d7edc_943b97e7b30346598935e662015a3658~mv2.jpg)      
+![](https://static.wixstatic.com/media/0d7edc_55a7c75278fd41a3bcc446d2d6e9505d~mv2.png)    
+![](https://static.wixstatic.com/media/0d7edc_20411a528eb742b9bd65a4a16db7c034~mv2.png)         
 ![](https://static.wixstatic.com/media/0d7edc_429d230a1bdf4821ba5f6d086ef4f1a8~mv2.png)        
+
+---
 
 ## 🗺️ Roadmap
 
@@ -274,31 +288,42 @@ newsLookup-Gen2/
 
 | Version | Notes |
 |---|---|
+| Gen2 Ver 1.2.0 | Tags for clippings, AI keyword suggestions, monolith-to-modules refactor, export fix |
+| Gen2 Ver 1.1.0 | Import/export for My Clippings, responsive UI, re-embedding API |
 | Gen2 Ver 1.0.0 | Full rewrite — RAG + embedding, Express UI, SQLite, My Clippings, RSS Editor |
 | v1.x (retired) | Node.js CLI, exact keyword matching, HTML crawling |
 
 The original version is archived at [newsLookup (retired)](https://github.com/Thomas-Leung-852/newsLookup).
 
 ---
-## 🤝 Built With AI
 
-This application was **entirely developed through natural language prompts** using [Claude](https://claude.ai) (Anthropic's Claude Sonnet) — no manual code writing by the author.
+## 🤝 Vibe Coding — Built Entirely Through Conversation
 
-Every feature — from the RAG pipeline and embedding search to the RSS Site Editor and My Clippings archive — was designed through conversation, reviewed by a human, and refined through iterative feedback.
+**Vibe coding** is a development workflow where you direct *what* to build through natural language, and the AI figures out *how*. No syntax memorisation, no manual code writing — just architecture decisions, honest feedback, and precise description of symptoms when things go wrong.
+
+This application was **entirely built through vibe coding** using [Claude Desktop](https://claude.ai) (Anthropic's Claude Sonnet) — every file, every feature, every bug fix was generated through conversation and reviewed by a human before being applied.
+
+### Why Claude Desktop, not an IDE integration?
+
+Several local-AI coding setups were tried before settling on Claude Desktop — including VS Code with the continue.dev extension running a QWEN code agent via Ollama. On a machine with no GPU and 32 GB RAM, local code agents were too slow for an iterative workflow, and code application was sometimes incorrect, requiring rollbacks. Claude Desktop with cloud inference removed the hardware bottleneck entirely and kept the feedback loop fast enough to stay productive.
+
+This also shaped a core architectural decision: keep the embedding model local and lightweight (free, no quota, runs on CPU), while routing the reasoning workload to the cloud — the same trade-off that made the development workflow viable applies to the app itself.
+
+v1.2.0 also included a full refactor from a monolithic single file to a modular project structure — a deliberate decision to reduce context window pressure in future development sessions, not just a code quality improvement.
 
 ### The Author's Role
 
 - **Direct the architecture** — deciding what to build and why
 - **Review every change** — reading and understanding generated code before applying it
 - **Catch design flaws** — questioning decisions, pushing back when something felt wrong
-- **Prompt for quality** — using natural language to optimise performance (e.g. Float32Array for vector operations) and ensure code safety, rather than editing code directly
+- **Prompt for quality** — using natural language to optimise performance (e.g. Float32Array for vector operations) and ensure code safety
 - **Hunt bugs by reading** — tracing actual runtime behaviour to identify root causes the AI had missed, then describing the symptom precisely enough for the AI to diagnose and fix it
-- **Manage context window decay** — recognising when a conversation had grown too long to be reliable; solving problem A would silently introduce problem B, fix loops would emerge, and the only escape was to open a fresh context and re-state the problem cleanly
-- **Know when not to over-prompt** — keeping requests focused (e.g. "code block only") to preserve context quality and avoid padding that accelerates decay
+- **Manage context window decay** — recognising when a conversation had grown too long to be reliable; solving problem A would silently introduce problem B, and the only escape was to open a fresh context and re-state the problem cleanly
+- **Know when not to over-prompt** — keeping requests focused (e.g. "code block only") to preserve context quality
 
-### Traditional vs. AI-Assisted Development
+### Traditional vs. Vibe Coding
 
-| Phase | Traditional Development | AI-Assisted Development |
+| Phase | Traditional Development | Vibe Coding |
 |---|---|---|
 | **Bottleneck** | Learning syntax & debugging typos | Context window decay & logical loops |
 | **Primary Skill** | Memorising APIs & libraries | Architecture design & code auditing |
@@ -316,15 +341,15 @@ The developer directed *what* to build and *why*; the AI figured out *how*. Neit
 > *"line 968 always returns zero."*  
 > — Thomas, finding the Float32Array serialisation bug by reading the code
 
-If you are a developer curious about AI-assisted development, this repository is a living example of what that workflow looks like — including the mistakes, the corrections, the fix loops, and knowing when to start a fresh conversation.
-
-### 💡 Lessons for AI-Assisted Development
+### 💡 Lessons for Vibe Coding
 
 - The AI writes fast but **you** catch the subtle bugs — read every change
 - When fixes start creating new problems, **the context is the problem** — start fresh
 - Describing a symptom precisely (`"always returns zero"`) is more effective than asking for a feature
 - Knowing *what* is wrong matters more than knowing *how* to fix it — the AI handles the how
 - A human who understands the domain will always out-prompt one who doesn't
+- **Refactor a monolith into modules before the codebase grows** — a single large file forces the AI to load everything into context every session; smaller, hyper-focused files mean the AI only loads what's relevant to the task, rather than wasting context window tokens on unrelated code
+- **A PROJECT_MAP pays for itself** — a single markdown file describing your architecture, file responsibilities, and dependency rules lets you bootstrap a fresh AI conversation in seconds; without it, re-establishing context after a reset costs time, tokens, and risks the AI making assumptions about structure it can no longer see
 
 ---
 

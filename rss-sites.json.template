@@ -70,11 +70,6 @@
     "region": "HK"
   },
   {
-    "name": "Hong Kong Herald",
-    "rss": "https://feeds.hongkongherald.com/rss/b82693edf38ebff8",
-    "region": "HK"
-  },
-  {
     "name": "RTHK",
     "rss": "https://rthk9.rthk.hk/rthk/news/rss/c_expressnews_clocal.xml",
     "region": "HK"
@@ -152,11 +147,6 @@
   {
     "name": "CBS News",
     "rss": "https://www.cbsnews.com/latest/rss/main",
-    "region": "News & Current Affairs"
-  },
-  {
-    "name": "CNN Top Stories",
-    "rss": "http://rss.cnn.com/rss/cnn_topstories.rss",
     "region": "News & Current Affairs"
   },
   {
