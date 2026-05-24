@@ -89,6 +89,7 @@ newsLookup Gen2 uses **two separate AI roles**:
 ```cmd
 set AI_MODEL=gpt-oss:120b-cloud
 set AI_API_KEY=your_ollama_cloud_key
+set AI_BASE_URL=https://ollama.com
 ```
 
 **Ollama Local reasoning** — requires 80GB RAM for 120b model:
@@ -96,6 +97,7 @@ set AI_API_KEY=your_ollama_cloud_key
 ollama pull gpt-oss:120b
 set AI_MODEL=gpt-oss:120b
 set AI_API_KEY=ollama
+set AI_BASE_URL=http://localhost:11434
 ```
 
 ---
@@ -125,6 +127,7 @@ Option A — Ollama Cloud *(free tier)*:
 ```cmd
 set AI_API_KEY=your_ollama_cloud_api_key
 set AI_MODEL=gpt-oss:120b-cloud
+set AI_BASE_URL=https://ollama.com
 set EMBED_MODEL=qwen3-embedding:8b
 npm start
 ```
@@ -134,6 +137,7 @@ Option B — Ollama Local *(fully offline)*:
 ollama pull gpt-oss:120b
 set AI_API_KEY=ollama
 set AI_MODEL=gpt-oss:120b
+set AI_BASE_URL=http://localhost:11434
 set EMBED_MODEL=qwen3-embedding:8b
 npm start
 ```
@@ -176,6 +180,7 @@ Option A — Ollama Cloud:
 ```bash
 export AI_API_KEY=your_ollama_cloud_api_key
 export AI_MODEL=gpt-oss:120b-cloud
+export AI_BASE_URL=https://ollama.com
 export EMBED_MODEL=qwen3-embedding:8b
 npm start
 ```
@@ -184,6 +189,7 @@ Option B — Ollama Local:
 ```bash
 export AI_API_KEY=ollama
 export AI_MODEL=gpt-oss:120b
+export AI_BASE_URL=http://localhost:11434
 export EMBED_MODEL=qwen3-embedding:8b
 npm start
 ```
@@ -197,12 +203,13 @@ Open your browser at `http://localhost:3000`
 | Variable | Default | Description |
 |---|---|---|
 | `AI_API_KEY` | *(required)* | Ollama Cloud API key or `ollama` for local |
-| `AI_BASE_URL` | `https://ollama.com` | Reasoning model base URL |
+| `AI_BASE_URL` | `https://ollama.com` | Reasoning model base URL — set to `http://localhost:11434` for local Ollama |
 | `AI_MODEL` | `gpt-oss:120b-cloud` | Reasoning model for RAG summaries |
 | `EMBED_MODEL` | `qwen3-embedding:8b` | Local embedding model for semantic search |
 | `EMBED_BASE_URL` | `http://localhost:11434` | Local Ollama URL for embedding |
-| `RSS_CACHE_TTL` | `900000` | RSS cache TTL in ms (default 15 mins) |
 | `PORT` | `3000` | HTTP server port |
+
+> **Note:** RSS cache TTL and other tuneable parameters are managed via the in-app Settings UI (`http://localhost:3000/settings.html`), not environment variables.
 
 ---
 
