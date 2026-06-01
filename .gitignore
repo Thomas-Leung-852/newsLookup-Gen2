@@ -142,3 +142,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+
+# newslookup files
+*.db
+*.bak
+rss-sites.json
+config/app-settings.json
+.env.backup
+test-drivers/

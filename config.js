@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 /**
  * config.js — Single source of truth for all environment variables and constants.
  *

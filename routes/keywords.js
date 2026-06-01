@@ -186,17 +186,22 @@ router.post("/generate", async (req, res) => {
     // Read live from settings so the UI slider takes effect immediately
     const maxKeywords = getSetting("keywords.maxSuggested");
 
-    // Deduplicate and cap at 300 titles to keep AI prompt size manageable
-    const uniqueTitles = [...new Set(allTitles)].slice(0, 300);
-    console.log(`  📰 Sending ${uniqueTitles.length} unique titles to AI`);
+    // Deduplicate all titles (used later for count verification against full corpus)
+    const uniqueTitles = [...new Set(allTitles)];
+    // Cap read live from settings — adjustable per model via the Settings screen.
+    const MAX_TITLES_FOR_AI = getSetting("keywords.maxTitlesForAI");
+    const titlesForAI = uniqueTitles.length > MAX_TITLES_FOR_AI
+      ? uniqueTitles.sort(() => Math.random() - 0.5).slice(0, MAX_TITLES_FOR_AI)
+      : uniqueTitles;
+    console.log(`  📰 ${uniqueTitles.length} unique titles total, sending ${titlesForAI.length} to AI`);
 
     const prompt =
-      `You are a news analyst. Below are ${uniqueTitles.length} news article headlines from ` +
+      `You are a news analyst. Below are ${titlesForAI.length} news article headlines from ` +
       `${region !== "all" ? region : "multiple regions"} for: ${dateFilter}.\n\n` +
       `Extract the TOP ${maxKeywords} most frequently discussed keywords or short phrases (1-4 words).\n` +
       `Focus on: people, organisations, countries, policy topics, economic themes, events.\n` +
       `Include both English and Chinese terms if present in the headlines.\n\n` +
-      `Headlines:\n${uniqueTitles.join("\n")}\n\n` +
+      `Headlines:\n${titlesForAI.join("\n")}\n\n` +
       `Reply with ONLY a JSON array of exactly ${maxKeywords} keyword strings.\n` +
       `No explanation, no markdown fences. Example:\n` +
       `["keyword1","keyword2","keyword3"]`;

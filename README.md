@@ -27,15 +27,15 @@ RSS feeds → qwen3-embedding:8b → Vector search (cosine similarity)
 **🔍 Embedding Model (`qwen3-embedding:8b`) — Semantic Search**
 Converts your query and every article title into high-dimensional vectors. Similarity is pure mathematics — cosine distance computed locally in milliseconds using Float32Array optimisation. One embedding call per search, not one per article. Your CPU fan might spin, but your API bill won't.
 
-**🤖 RAG Model (`gpt-oss:120b-cloud`) — Summarisation**
-`gpt-oss:120b-cloud` retrieves and reads article content then generates concise 3-bullet summaries — Retrieval-Augmented Generation in action. Intelligent fallback chain: full article page → RSS description → title-only for paywalled sites. Summaries cached permanently in SQLite — never pay twice for the same article.
+**🤖 Reasoning Model (`gpt-oss:120b-cloud`) — Summarisation via RAG**
+`gpt-oss:120b-cloud` retrieves and reads article content then generates concise 3-bullet summaries — Retrieval-Augmented Generation (RAG) in action. Intelligent fallback chain: full article page → RSS description → title-only for paywalled sites. Summaries cached permanently in SQLite — never pay twice for the same article.
 
 ---
 
 ## ✨ Features
 
 - **Semantic search** — `qwen3-embedding:8b` running 100% locally, free forever
-- **RAG summarisation** — `gpt-oss:120b-cloud` generates 3-bullet summaries with intelligent fallback
+- **RAG summarisation** — `gpt-oss:120b-cloud` (reasoning model) generates 3-bullet summaries with intelligent fallback
 - **AI keyword suggestions** — trending keywords auto-generated from today's headlines; click to search instantly
 - **Multilingual** — English, 繁體中文, Cantonese or mix all three in one query
 - **Intelligent caching** — RSS feeds (15 min TTL) + article vectors (permanent) = 2nd search in ~3 seconds
@@ -62,7 +62,7 @@ Converts your query and every article title into high-dimensional vectors. Simil
 |---|---|---|
 | Node.js | ≥ 22.0.0 | Required for ESM (`import`) support |
 | npm | ≥ 8.0.0 | Comes with Node.js |
-| Ollama | Latest | For local embedding model |
+| Ollama | ≥ 0.24.0 | For local embedding model |
 | Modern browser | Chrome, Edge, Firefox, Safari | For the web UI |
 
 **Hardware for embedding model**
@@ -81,120 +81,91 @@ newsLookup Gen2 uses **two separate AI roles**:
 | Role | Model | Where |
 |---|---|---|
 | **Embedding** (semantic search) | `qwen3-embedding:8b` | Always local — free, no quota |
-| **Reasoning** (RAG summaries) | `gpt-oss:120b-cloud` or `gpt-oss:120b` | Cloud or local |
+| **Reasoning** (summarisation via RAG) | `gpt-oss:120b-cloud` or `qwen2.5:7b` | Cloud or local |
 
 > The embedding model **always runs locally** — it never uses cloud API quota.
 
-**Ollama Cloud reasoning** — get your free API key at [ollama.com/settings/keys](https://ollama.com/settings/keys):
-```cmd
-set AI_MODEL=gpt-oss:120b-cloud
-set AI_API_KEY=your_ollama_cloud_key
-set AI_BASE_URL=https://ollama.com
-```
+**Ollama Cloud reasoning** — get your free API key at [ollama.com/settings/keys](https://ollama.com/settings/keys)
 
-**Ollama Local reasoning** — requires 80GB RAM for 120b model:
-```cmd
-ollama pull gpt-oss:120b
-set AI_MODEL=gpt-oss:120b
-set AI_API_KEY=ollama
-set AI_BASE_URL=http://localhost:11434
-```
+**Ollama Local reasoning** — requires sufficient RAM; set `AI_MODEL` in `.env` to your preferred local model
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Installation
 
-**1. Install prerequisites**
-- copy rss-sites.json.template rss-sites.json
-- Node.js v22+ — [nodejs.org](https://nodejs.org)
-- Ollama — [ollama.com/download](https://ollama.com/download)
+### Step 1 — Prerequisites
 
-**2. Pull the embedding model**
-```cmd
-ollama pull qwen3-embedding:8b
-```
+Install the following before running the setup script:
 
-**3. Clone and install**
-```cmd
+- **Node.js v22+** — [nodejs.org/en/download](https://nodejs.org/en/download) · if using nvm: `nvm install 22 && nvm use 22`
+- **Ollama ≥ 0.24.0** — [ollama.com/download](https://ollama.com/download)
+  - Windows: launch Ollama from the Start Menu (runs in system tray)
+  - Linux: `sudo systemctl start ollama && sudo systemctl enable ollama`
+
+### Step 2 — Clone the repository
+
+```bash
 git clone https://github.com/Thomas-Leung-852/newsLookup-Gen2.git
 cd newsLookup-Gen2
-npm install
 ```
 
-**4. Set your AI provider and run**
+### Step 3 — Run the setup script
 
-Option A — Ollama Cloud *(free tier)*:
-```cmd
-set AI_API_KEY=your_ollama_cloud_api_key
-set AI_MODEL=gpt-oss:120b-cloud
-set AI_BASE_URL=https://ollama.com
-set EMBED_MODEL=qwen3-embedding:8b
-npm start
+The setup script handles everything: version checks, model pulls, `rss-sites.json`, `.env` creation and `npm install`.
+
+**Windows (PowerShell):**
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\setup-windows.ps1
 ```
 
-Option B — Ollama Local *(fully offline)*:
-```cmd
-ollama pull gpt-oss:120b
-set AI_API_KEY=ollama
-set AI_MODEL=gpt-oss:120b
-set AI_BASE_URL=http://localhost:11434
-set EMBED_MODEL=qwen3-embedding:8b
-npm start
+**Linux:**
+```bash
+chmod +x setup-linux.sh
+./setup-linux.sh
+```
+
+**What the setup script does:**
+
+| Step | Action |
+|---|---|
+| 1 | Check Node.js ≥ 22.0.0 and npm ≥ 8.0.0 |
+| 2 | Check Ollama ≥ 0.24.0 |
+| 3 | Ask: Cloud or Local AI mode → sets correct `.env` values |
+| 4 | Offer to pull `qwen3-embedding:8b` (embed model) |
+| 4 | Offer to pull `qwen2.5:7b` (local AI mode only) |
+| 5 | Run `npm install` |
+| 6 | Copy `rss-sites.json.template` → `rss-sites.json` if missing |
+| 7 | Set server port (default: 3000) |
+| 8 | Create `.env` with correct values (backs up existing `.env` if present) |
+
+### Step 4 — Start the server
+
+```bash
+node server.js
 ```
 
 Open your browser at `http://localhost:3000`
 
 ---
 
-### 🐧 Ubuntu 24.x
+## 🗑️ Uninstall
 
-**1. Install prerequisites**
-```bash
-# Use RSS templates 
-cp rss-sites.json.template rss-sites.json
+To remove Ollama and project config files, run the uninstall script:
 
-# Node.js v22
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull embedding model (best quality)
-ollama pull qwen3-embedding:8b
-
-# Pull reasoning model for local use (optional — needs 80GB RAM)
-ollama pull gpt-oss:120b
+**Windows:**
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\uninstall-windows.ps1
 ```
 
-**2. Clone and install**
+**Linux:**
 ```bash
-git clone https://github.com/Thomas-Leung-852/newsLookup-Gen2.git
-cd newsLookup-Gen2
-npm install
+chmod +x uninstall-linux.sh
+./uninstall-linux.sh
 ```
 
-**3. Run**
-
-Option A — Ollama Cloud:
-```bash
-export AI_API_KEY=your_ollama_cloud_api_key
-export AI_MODEL=gpt-oss:120b-cloud
-export AI_BASE_URL=https://ollama.com
-export EMBED_MODEL=qwen3-embedding:8b
-npm start
-```
-
-Option B — Ollama Local:
-```bash
-export AI_API_KEY=ollama
-export AI_MODEL=gpt-oss:120b
-export AI_BASE_URL=http://localhost:11434
-export EMBED_MODEL=qwen3-embedding:8b
-npm start
-```
-
-Open your browser at `http://localhost:3000`
+The uninstall script will ask for confirmation before removing each item: Ollama, pulled models (`~/.ollama`), `.env`, `rss-sites.json`, and `node_modules`. Node.js is never touched.
 
 ---
 
@@ -204,12 +175,12 @@ Open your browser at `http://localhost:3000`
 |---|---|---|
 | `AI_API_KEY` | *(required)* | Ollama Cloud API key or `ollama` for local |
 | `AI_BASE_URL` | `https://ollama.com` | Reasoning model base URL — set to `http://localhost:11434` for local Ollama |
-| `AI_MODEL` | `gpt-oss:120b-cloud` | Reasoning model for RAG summaries |
+| `AI_MODEL` | `gpt-oss:120b-cloud` | Reasoning model — performs summarisation via RAG |
 | `EMBED_MODEL` | `qwen3-embedding:8b` | Local embedding model for semantic search |
 | `EMBED_BASE_URL` | `http://localhost:11434` | Local Ollama URL for embedding |
 | `PORT` | `3000` | HTTP server port |
 
-> **Note:** RSS cache TTL and other tuneable parameters are managed via the in-app Settings UI (`http://localhost:3000/settings.html`), not environment variables.
+> **Note:** RSS cache TTL and other tuneable parameters are managed via the in-app Settings UI (`http://localhost:3000/settings.html`), not environment variables. Settings are stored in `config/app-settings.json` (user file, not tracked in Git). Defaults and schema live in `config/app-settings.default.json` (tracked in Git). On startup, the app merges both — your changes are always preserved when you pull updates.
 
 ---
 
@@ -217,19 +188,53 @@ Open your browser at `http://localhost:3000`
 
 ```
 newsLookup-Gen2/
-├── server.js                   # Express server — RSS, embedding, search, RAG API
-├── rss-sites.json.template     # RSS Template (make a copy and editable via built-in editor)
-├── model-profiles.json         # Per-model parameters — hot-reloaded, no restart
-├── articles.db                 # SQLite — article history (auto-created)
-├── collection.db               # SQLite — My Clippings + summary cache (auto-created)
-├── config/
-│   └── app-settings.json       # Runtime tuneable settings — persisted to disk
+├── server.js                   # Entry point — loads settings, mounts all routers, starts Express
+├── config.js                   # Single source of truth for all env vars (AI, embed, paths)
 ├── package.json
-└── public/
-    ├── index.html              # Main search UI
-    ├── editor.html             # RSS Site Editor
-    ├── settings.html           # App settings UI
-    └── collection.html         # My Clippings
+├── package-lock.json
+├── rss-sites.json.template     # RSS sites template — copy to rss-sites.json before first run
+├── rss-sites.json              # Active RSS sites list (editable via built-in editor)
+├── model-profiles.json         # Per-model Ollama parameters — hot-reloaded, no restart needed
+├── articles.db                 # SQLite — search history + keyword cache (auto-created)
+├── collection.db               # SQLite — My Clippings + summary cache (auto-created)
+├── PROJECT_MAP.md              # Architecture reference — paste into any new AI chat for context
+├── RELEASE_NOTE.md             # Release history
+├── README.md
+├── .gitignore
+│
+├── config/
+│   ├── app-settings.default.json   # Canonical defaults + schema — tracked in Git, never modified by app
+│   └── app-settings.json           # User's live runtime settings — not tracked in Git (in .gitignore)
+│
+├── public/
+│   ├── index.html              # Main search UI
+│   ├── collection.html         # My Clippings
+│   ├── settings.html           # App settings UI
+│   └── editor.html             # RSS Site Editor
+│
+├── routes/
+│   ├── search.js               # POST /api/search (SSE), sites, cache, debug endpoints
+│   ├── collection.js           # Full CRUD for /api/collection/*
+│   ├── summarise.js            # POST /api/summarise — 3-level fallback + cache
+│   ├── keywords.js             # GET/POST /api/suggested-keywords
+│   ├── history.js              # GET/DELETE /api/history
+│   └── settings.js             # GET/PATCH /api/settings
+│
+├── lib/
+│   ├── embedding.js            # Local Ollama embed client, cosine similarity, RSS vector cache
+│   ├── rss.js                  # RSS fetch + in-memory cache (TTL via getSetting)
+│   ├── ai.js                   # Cloud Ollama client, model profiles
+│   └── settings.js             # Runtime settings manager — synchronous getSetting()
+│
+├── db/
+│   ├── articlesDb.js           # SQLite: articles + suggested_keywords_cache tables
+│   └── collectionDb.js         # SQLite: collection + summary_cache tables
+│
+
+├── setup-windows.ps1           # Windows setup script
+├── setup-linux.sh              # Linux setup script
+├── uninstall-windows.ps1       # Windows uninstall script
+└── uninstall-linux.sh          # Linux uninstall script
 ```
 
 ---
@@ -273,11 +278,11 @@ newsLookup-Gen2/
 
 ---
 
-## 🗺️ Screenshot
+## 📸 Screenshots
 
-![](https://static.wixstatic.com/media/0d7edc_55a7c75278fd41a3bcc446d2d6e9505d~mv2.png)    
-![](https://static.wixstatic.com/media/0d7edc_20411a528eb742b9bd65a4a16db7c034~mv2.png)         
-![](https://static.wixstatic.com/media/0d7edc_429d230a1bdf4821ba5f6d086ef4f1a8~mv2.png)        
+![](https://static.wixstatic.com/media/0d7edc_55a7c75278fd41a3bcc446d2d6e9505d~mv2.png)
+![](https://static.wixstatic.com/media/0d7edc_20411a528eb742b9bd65a4a16db7c034~mv2.png)
+![](https://static.wixstatic.com/media/0d7edc_429d230a1bdf4821ba5f6d086ef4f1a8~mv2.png)
 
 ---
 
@@ -295,6 +300,7 @@ newsLookup-Gen2/
 
 | Version | Notes |
 |---|---|
+| Gen2 Ver 1.3.0 | Setup & uninstall scripts for Windows and Linux; `dotenv` integration so `.env` is loaded correctly; README restructured with setup guide and accurate project structure; configurable `keywords.maxTitlesForAI` setting; mobile UI refinements |
 | Gen2 Ver 1.2.0 | Tags for clippings, AI keyword suggestions, monolith-to-modules refactor, export fix |
 | Gen2 Ver 1.1.0 | Import/export for My Clippings, responsive UI, re-embedding API |
 | Gen2 Ver 1.0.0 | Full rewrite — RAG + embedding, Express UI, SQLite, My Clippings, RSS Editor |
@@ -362,7 +368,7 @@ The developer directed *what* to build and *why*; the AI figured out *how*. Neit
 
 **Development environment:** Claude Desktop (claude.ai)  
 **Author:** Thomas Leung  
-**AI Assistant:** Claude Sonnet by Anthropic   
+**AI Assistant:** Claude Sonnet by Anthropic
 
 ---
 
@@ -372,4 +378,4 @@ MIT — free to use, modify, and distribute.
 
 ---
 
-*Built with Node.js · Express · Ollama · qwen3-embedding:8b · gpt-oss:120b · SQLite · RSS · 港式奶茶 ☕*
+*Built with Node.js · Express · Ollama · qwen3-embedding:8b · gpt-oss:120b-cloud · qwen2.5:7b · SQLite · RSS · 港式奶茶 ☕*
