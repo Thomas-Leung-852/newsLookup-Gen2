@@ -36,7 +36,7 @@ import {
   getEmbedding, isRelevant, cosineSimilarity,
   embedCache, rssCache, articleVectorCache, getRssCacheAge,
 } from "../lib/embedding.js";
-import { fetchRSS } from "../lib/rss.js";
+import { fetchRSS, extractThumbnail } from "../lib/rss.js";
 
 export const router = Router();
 
@@ -61,7 +61,7 @@ export function reloadSites(s)  { ALL_SITES = s; }
 /**
  * GET /api/sites
  * Returns the full list of configured RSS news sources.
- * Returns: Array<{ name, region, rss }>
+ * Returns: Array<{ name, region, rss, enabled }>
  */
 router.get("/sites", (req, res) => {
   res.json(ALL_SITES);
@@ -79,7 +79,7 @@ router.get("/sites", (req, res) => {
  *         Writes to SITES_PATH synchronously — if the write fails (e.g. disk
  *         full), the error is returned and ALL_SITES is NOT updated.
  *
- * Request body: Array<{ name, region, rss }>
+ * Request body: Array<{ name, region, rss, enabled }>
  * Returns: { ok: true, count: number }
  */
 router.put("/sites", (req, res) => {
@@ -118,6 +118,12 @@ router.put("/sites", (req, res) => {
  *     the route automatically switches to simple substring keyword matching.
  *     Quality is lower but the search still works.
  *
+ * SITE ENABLE/DISABLE:
+ *     Sites with enabled:false in rss-sites.json are excluded from
+ *     targetSites — their RSS feeds are never fetched. Treated as enabled
+ *     when the field is missing (s.enabled !== false), so older entries
+ *     without the field still work.
+ *
  * GOTCHA: embedCache is cleared at the start of each search to prevent
  *         stale query vectors from a previous session affecting results.
  *         articleVectorCache is NOT cleared — article embeddings persist
@@ -146,9 +152,10 @@ router.post("/search", async (req, res) => {
   if (!keywords.length) return res.status(400).json({ error: "Please provide at least one keyword." });
   if (!AI_API_KEY)      return res.status(500).json({ error: "AI_API_KEY not set on server." });
 
-  const targetSites = sites.length
+  const targetSites = (sites.length
     ? ALL_SITES.filter(s => sites.includes(s.name))
-    : ALL_SITES;
+    : ALL_SITES
+  ).filter(s => s.enabled !== false);
 
   // Set up SSE headers
   res.setHeader("Content-Type",  "text/event-stream");
@@ -185,6 +192,15 @@ router.post("/search", async (req, res) => {
       send("progress", { message: `[keyword mode] Fetching ${site.name}...` });
       let articles = await fetchRSS(site);
 
+      if (articles.totalAvailable && articles.totalAvailable > articles.length) {
+        send("progress", {
+          message:
+            `⚠ ${site.name}: feed has ${articles.totalAvailable} articles — only the ` +
+            `${articles.length} most recent are fetched (raise "Max Articles per Feed" ` +
+            `in Settings to see more)`,
+        });
+      }
+
       // Client-side date filter for keyword mode
       if (dateFilter && dateFilter !== "all") {
         const now = new Date();
@@ -217,13 +233,14 @@ router.post("/search", async (req, res) => {
         const text = (article.title + " " + (article.summary || "")).toLowerCase();
         if (keywords.some(k => text.includes(k.toLowerCase()))) {
           const match = {
-            source:  article.source,
-            region:  article.region,
-            title:   article.title,
-            pubDate: article.pubDate || "",
-            topic:   keywords[0],
-            score:   null,
-            link:    article.link,
+            source:    article.source,
+            region:    article.region,
+            title:     article.title,
+            pubDate:   article.pubDate || "",
+            thumbnail: article.thumbnail || null,
+            topic:     keywords[0],
+            score:     null,
+            link:      article.link,
           };
           matched.push(match);
           insertArticle(match);
@@ -245,6 +262,15 @@ router.post("/search", async (req, res) => {
   for (const site of targetSites) {
     send("progress", { message: `Fetching ${site.name}...` });
     let articles = await fetchRSS(site);
+
+    if (articles.totalAvailable && articles.totalAvailable > articles.length) {
+      send("progress", {
+        message:
+          `⚠ ${site.name}: feed has ${articles.totalAvailable} articles — only the ` +
+          `${articles.length} most recent are fetched (raise "Max Articles per Feed" ` +
+          `in Settings to see more)`,
+      });
+    }
 
     // Timezone-aware date filtering — pubDate stored as UTC, filter in local time
     if (dateFilter && dateFilter !== "all") {
@@ -302,13 +328,14 @@ router.post("/search", async (req, res) => {
       const result = await isRelevant(article, queryVec, effectiveThreshold);
       if (result.relevant) {
         const match = {
-          source:  article.source,
-          region:  article.region,
-          title:   article.title,
-          pubDate: article.pubDate || "",
-          topic:   result.topic,
-          score:   result.score,
-          link:    article.link,
+          source:    article.source,
+          region:    article.region,
+          title:     article.title,
+          pubDate:   article.pubDate || "",
+          thumbnail: article.thumbnail || null,
+          topic:     result.topic,
+          score:     result.score,
+          link:      article.link,
         };
         matched.push(match);
         insertArticle(match);
@@ -347,6 +374,7 @@ router.get("/test-rss", async (req, res) => {
     processEntities: true, htmlEntities: true,
     allowBooleanAttributes: true, parseAttributeValue: false,
     entityExpansionLimit: 10000,
+    ignoreAttributes: false, attributeNamePrefix: "@_",
   });
 
   try {
@@ -365,13 +393,18 @@ router.get("/test-rss", async (req, res) => {
     const list       = Array.isArray(items) ? items : [items];
     const feedUpdated = channel?.lastBuildDate || channel?.updated || channel?.pubDate || null;
 
-    const articles = list.slice(0, 50).map(item => ({
-      title:   item.title?.["#text"] || item.title || "(no title)",
-      link:    item.link?.href       || item.link  || item.guid || "",
-      pubDate: item.pubDate || item.updated?.["#text"] || item.updated || "",
+    const articles = list.slice(0, getSetting("rss.maxArticlesPerFeed") || 50).map(item => ({
+      title:     item.title?.["#text"] || item.title || "(no title)",
+      link:      item.link?.["@_href"] || item.link?.href || item.link || item.guid || "",
+      pubDate:   item.pubDate || item.updated?.["#text"] || item.updated || "",
+      thumbnail: extractThumbnail(item),
     })).filter(a => a.title);
 
-    res.json({ status: r.status, ok: true, statusText: r.statusText, feedUpdated, articles });
+    res.json({
+      status: r.status, ok: true, statusText: r.statusText, feedUpdated,
+      totalAvailable: list.length,
+      articles,
+    });
   } catch (err) {
     res.json({ status: 0, ok: false, statusText: err.message, articles: [] });
   }

@@ -10,6 +10,7 @@ const DOMAIN_META = {
   search:     { icon: '🔍',  label: 'newsLookup - Search',              cls: 'search'     },
   rss:        { icon: '📡',  label: 'newsLookup - RSS Feeds',           cls: 'rss'        },
   keywords:   { icon: '💡',  label: 'newsLookup - Keyword Suggestions', cls: 'keywords'   },
+  ui:         { icon: '🎨',  label: 'newsLookup - Display',             cls: 'ui'         },
 };
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -29,7 +30,7 @@ function formatDate(iso) {
 
 // ── Render helpers ────────────────────────────────────────────────────────────
 function buildControl(item) {
-  const { dotPath, type, currentValue, min, max, step, unit } = item;
+  const { dotPath, type, currentValue, min, max, step, unit, options } = item;
   const safeId = dotPath.replace(/\./g, '_');
 
   if (type === 'boolean') {
@@ -39,6 +40,20 @@ function buildControl(item) {
                onchange="saveSetting('${dotPath}', this.checked)">
         <span class="toggle-track"></span>
       </label>`;
+  }
+
+  if (type === 'select') {
+    const opts = (options || []).map(opt => {
+      const value = typeof opt === 'object' ? opt.value : opt;
+      const label = typeof opt === 'object' ? (opt.label || opt.value) : opt;
+      const sel   = value === currentValue ? ' selected' : '';
+      return `<option value="${value}"${sel}>${label}</option>`;
+    }).join('');
+    return `
+      <select id="${safeId}" class="select-input num-input" title="${dotPath}"
+              onchange="saveSetting('${dotPath}', this.value)">
+        ${opts}
+      </select>`;
   }
 
   const sliderMin  = min  !== undefined ? min  : 0;

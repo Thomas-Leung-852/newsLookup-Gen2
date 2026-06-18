@@ -54,7 +54,7 @@ router.get("/", (req, res) => {
   try {
     const { dateFrom, dateTo, limit = 500 } = req.query;
     const rows = collectionDb.exec(
-      `SELECT id,newsId,url,title,summary,score,threshold,source,region,pubDate,savedAt,tags
+      `SELECT id,newsId,url,title,summary,score,threshold,source,region,pubDate,savedAt,tags,thumbnail
        FROM collection
        ORDER BY COALESCE(NULLIF(pubDate,''), savedAt) DESC
        LIMIT ?`,
@@ -163,7 +163,7 @@ router.get("/get-vector", async (req, res) => {
 router.post("/", (req, res) => {
   try {
     const { newsId, url, title, summary, vector, score, threshold,
-            source, region, pubDate, tags } = req.body;
+            source, region, pubDate, tags, thumbnail } = req.body;
     if (!url || !title) return res.status(400).json({ error: "url and title required" });
 
     // Stable dedup key — SHA-256 of URL if not supplied by caller
@@ -193,11 +193,12 @@ router.post("/", (req, res) => {
 
     collectionDb.run(
       `INSERT OR REPLACE INTO collection
-         (newsId,url,title,summary,vector,score,threshold,source,region,pubDate,savedAt,tags)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+         (newsId,url,title,summary,vector,score,threshold,source,region,pubDate,savedAt,tags,thumbnail)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [id, url, title, summary || "", v1,
        score || null, threshold || null, source || "", region || "",
-       normalizedPubDate, new Date().toISOString(), normalisedTags]
+       normalizedPubDate, new Date().toISOString(), normalisedTags,
+       thumbnail || null]
     );
     saveCollectionDB();
     res.json({ ok: true, newsId: id });
@@ -332,7 +333,7 @@ router.post("/search", async (req, res) => {
     if (!queryVec) return res.status(500).json({ error: "Embedding failed — is EMBED_MODEL running?" });
 
     const rows = collectionDb.exec(
-      `SELECT id,newsId,url,title,summary,vector,score,threshold,source,region,pubDate,savedAt,tags
+      `SELECT id,newsId,url,title,summary,vector,score,threshold,source,region,pubDate,savedAt,tags,thumbnail
        FROM collection WHERE vector IS NOT NULL`
     );
     if (!rows.length) return res.json({ items: [], total: 0, query });

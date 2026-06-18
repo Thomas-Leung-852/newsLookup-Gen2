@@ -2,286 +2,343 @@
   {
     "name": "The Japan Times",
     "rss": "https://www.japantimes.co.jp/feed/",
-    "region": "Asia"
+    "region": "Asia",
+    "enabled": true
   },
   {
     "name": "The Straits Times",
     "rss": "https://www.straitstimes.com/news/world/rss.xml",
-    "region": "Asia"
+    "region": "Asia",
+    "enabled": true
   },
   {
     "name": "Times of India",
     "rss": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
-    "region": "Asia"
+    "region": "Asia",
+    "enabled": true
   },
   {
     "name": "ABC News (AU)",
     "rss": "https://www.abc.net.au/news/feed/52498/rss.xml",
-    "region": "Australia"
+    "region": "Australia",
+    "enabled": true
   },
   {
     "name": "The Sydney Morning Herald",
     "rss": "https://www.smh.com.au/rss/feed.xml",
-    "region": "Australia"
+    "region": "Australia",
+    "enabled": true
   },
   {
     "name": "Bloomberg",
     "rss": "https://feeds.bloomberg.com/markets/news.rss",
-    "region": "Business & Finance"
+    "region": "Business & Finance",
+    "enabled": true
   },
   {
     "name": "MarketWatch",
     "rss": "https://www.marketwatch.com/rss/topstories",
-    "region": "Business & Finance"
+    "region": "Business & Finance",
+    "enabled": true
   },
   {
     "name": "The Economist",
     "rss": "https://www.economist.com/the-world-this-week/rss.xml",
-    "region": "Business & Finance"
+    "region": "Business & Finance",
+    "enabled": true
   },
   {
     "name": "CBC News",
     "rss": "https://www.cbc.ca/cmlink/rss-world",
-    "region": "Canada"
+    "region": "Canada",
+    "enabled": true
   },
   {
     "name": "The Globe and Mail",
     "rss": "https://www.theglobeandmail.com/arc/outboundfeeds/rss/category/world/",
-    "region": "Canada"
+    "region": "Canada",
+    "enabled": true
   },
   {
     "name": "Fintech Hong Kong",
     "rss": "https://fintechnews.hk/feed/",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "FT",
     "rss": "https://www.ft.com/hong-kong?format=rss",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "Google News",
     "rss": "https://news.google.com/rss?hl=zh-HK&gl=HK&ceid=HK:zh-Hant",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "HKFP",
     "rss": "https://hongkongfp.com/feed/",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "RTHK",
     "rss": "https://rthk9.rthk.hk/rthk/news/rss/c_expressnews_clocal.xml",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "South China Morning Post",
     "rss": "https://www.scmp.com/rss/91/feed",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "The Economic Times (HK)",
     "rss": "https://economictimes.indiatimes.com/rssfeeds/121811213.cms",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "The Guardian (HK)",
     "rss": "https://www.theguardian.com/world/hong-kong/rss",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "The Standard",
     "rss": "https://www.thestandard.com.hk/rss_news.php",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "Yahoo 新聞",
     "rss": "https://hk.news.yahoo.com/rss/hong-kong",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "巴士的報",
     "rss": "https://www.bastillepost.com/hongkong/feed",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "明報",
     "rss": "https://news.mingpao.com/rss/pns/s00001.xml",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "星島日報",
     "rss": "https://www.stheadline.com/rss",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "東周網",
     "rss": "https://eastweek.stheadline.com/rss",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "香港政府新聞網",
     "rss": "https://www.news.gov.hk/tc/common/html/topstories.rss.xml",
-    "region": "HK"
+    "region": "HK",
+    "enabled": true
   },
   {
     "name": "ABC News (US)",
     "rss": "https://abcnews.go.com/abcnews/topstories",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Al Jazeera",
     "rss": "https://www.aljazeera.com/xml/rss/all.xml",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Associated Press",
     "rss": "https://newsatme.com/go/ap/rss",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "BBC World News",
     "rss": "https://feeds.bbci.co.uk/news/world/rss.xml",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "CBS News",
     "rss": "https://www.cbsnews.com/latest/rss/main",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Deutsche Welle (DW)",
     "rss": "https://rss.dw.com/rdf/rss-en-world",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Financial Times",
     "rss": "https://www.ft.com/?format=rss",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Forbes Global",
     "rss": "https://www.forbes.com/business/feed/",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Fox News World",
     "rss": "https://feeds.foxnews.com/foxnews/world",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "France 24",
     "rss": "https://www.france24.com/en/rss",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "NBC News",
     "rss": "https://feeds.nbcnews.com/nbcnews/public/world",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "NPR News",
     "rss": "https://feeds.npr.org/1001/rss.xml",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "PBS News",
     "rss": "https://www.pbs.org/newshour/feeds/rss/politics",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Radio Free Europe",
     "rss": "https://www.rferl.org/api/",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "The Hill",
     "rss": "https://thehill.com/feed/",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "The New York Times",
     "rss": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "The Washington Post",
     "rss": "https://feeds.washingtonpost.com/rss/world",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Time Magazine",
     "rss": "https://time.com/feed/",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "VOX World Politics",
     "rss": "https://www.vox.com/rss/world-politics/index.xml",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Wall Street Journal",
     "rss": "https://feeds.a.dj.com/rss/RSSWorldNews.xml",
-    "region": "News & Current Affairs"
+    "region": "News & Current Affairs",
+    "enabled": true
   },
   {
     "name": "Ars Technica",
     "rss": "https://feeds.arstechnica.com/arstechnica/index",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "CNET",
     "rss": "https://www.cnet.com/rss/news/",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "Engadget",
     "rss": "https://www.engadget.com/rss.xml",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "Gizmodo",
     "rss": "https://gizmodo.com/rss",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "MIT Tech Review",
     "rss": "https://www.technologyreview.com/feed/",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "TechCrunch",
     "rss": "https://techcrunch.com/feed/",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "Wired",
     "rss": "https://www.wired.com/feed/rss",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "ZDNet",
     "rss": "https://www.zdnet.com/news/rss.xml",
-    "region": "Tech"
+    "region": "Tech",
+    "enabled": true
   },
   {
     "name": "Daily Mail",
     "rss": "https://www.dailymail.co.uk/news/index.rss",
-    "region": "UK"
+    "region": "UK",
+    "enabled": true
   },
   {
     "name": "The Independent",
     "rss": "https://www.independent.co.uk/news/world/rss",
-    "region": "UK"
+    "region": "UK",
+    "enabled": true
   },
   {
     "name": "The Mirror",
     "rss": "https://www.mirror.co.uk/news/world-news/rss.xml",
-    "region": "UK"
+    "region": "UK",
+    "enabled": true
   },
   {
     "name": "The Telegraph",
     "rss": "https://www.telegraph.co.uk/rss.xml",
-    "region": "UK"
+    "region": "UK",
+    "enabled": true
   }
 ]

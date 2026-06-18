@@ -37,6 +37,18 @@ newsLookup/
 │                           #       live in config/app-settings.json instead.
 │                           # REMOVED: EMBED_THRESHOLD, RSS_CACHE_TTL (moved to app-settings.json)
 │
+├── rss-sites_json.template  # Master copy of the sites list. Tracked in Git.
+│                           # Copied to rss-sites.json by the setup scripts on first
+│                           # install. Each entry: { name, region, rss, enabled }.
+│                           # Update this file (not just rss-sites.json) when adding
+│                           # a site that should ship with the app by default.
+│
+├── rss-sites.json          # User's live sites list (path from SITES_PATH in config.js).
+│                           # NOT tracked in Git — created from the template above.
+│                           # Read/written via GET/PUT /api/sites in routes/search.js.
+│                           # enabled:false sites are skipped by fetchRSS() callers —
+│                           # missing the field is treated as enabled (enabled !== false).
+│
 ├── config/
 │   ├── app-settings.default.json
 │   │                       # Canonical defaults + full _meta schema.
@@ -60,6 +72,9 @@ newsLookup/
 │                           # Exports: collectionDb, initCollectionDB(),
 │                           #          saveCollectionDB(),
 │                           #          getCachedSummary(), cacheSummary()
+│                           # collection table includes thumbnail TEXT column.
+│                           # Auto-migration: ALTER TABLE ADD COLUMN thumbnail
+│                           #   runs on every boot — safe no-op if already exists.
 │
 ├── lib/
 │   ├── settings.js         # Runtime settings manager.
@@ -72,6 +87,8 @@ newsLookup/
 │   │                       # RULE: getSetting() is synchronous — safe on hot paths.
 │   │                       # RULE: No imports from routes/* or db/*.
 │   │                       # RULE: flushToDisk() only writes app-settings.json (never default).
+│   │                       # Supported types: integer, float, boolean, select.
+│   │                       #   select: validates value is in meta.options array.
 │   │
 │   ├── embedding.js        # Local Ollama embed client (ollamaLocal).
 │   │                       # In-memory: rssCache, articleVectorCache, embedCache.
@@ -83,7 +100,26 @@ newsLookup/
 │   ├── rss.js              # RSS fetch + in-process cache.
 │   │                       # TTL read live via getSetting('rss.cacheTtlMinutes') —
 │   │                       # settings UI changes take effect immediately, no restart.
-│   │                       # Exports: fetchRSS(), fetchRSSFromNet()
+│   │                       # Exports: fetchRSS(), fetchRSSFromNet(), extractThumbnail()
+│   │                       # Per-feed item cap read live via getSetting('rss.maxArticlesPerFeed')
+│   │                       #   (default 200) — replaces an old hardcoded 50 that silently
+│   │                       #   truncated high-volume feeds (e.g. HK01's 234 items) regardless
+│   │                       #   of date filter chosen on the frontend.
+│   │                       # fetchRSSFromNet() stamps a `totalAvailable` property on the
+│   │                       #   returned array (true <item> count before truncation) so
+│   │                       #   callers can detect/report truncation. Not a real array index —
+│   │                       #   invisible to JSON.stringify/.map/.filter.
+│   │                       # extractThumbnail(): 5-pattern priority chain —
+│   │                       #   media:thumbnail → media:content → enclosure →
+│   │                       #   plain <image> URL → first <img> in description HTML
+│   │                       # GOTCHA: XML_PARSER_OPTIONS must have ignoreAttributes:false
+│   │                       #   and attributeNamePrefix:"@_" — without these, all feed
+│   │                       #   attributes (url, type, medium) are silently discarded.
+│   │                       # NOTE: takes whatever site object it's given — does NOT
+│   │                       #   know about enabled/disabled. Callers (routes/search.js,
+│   │                       #   routes/keywords.js) filter disabled sites out of
+│   │                       #   targetSites BEFORE calling fetchRSS(), so disabled
+│   │                       #   sites are never fetched or cached.
 │   │
 │   └── ai.js               # Cloud Ollama client (ollama).
 │                           # Exports: callAI(), stripHtml(),
@@ -108,6 +144,16 @@ newsLookup/
 │   │                       # THRESHOLD: uses slider value directly — NO auto-scaling.
 │   │                       #   effectiveThreshold = threshold (from request body)
 │   │                       #   tokenToThreshold() and autoAdjustThreshold() REMOVED.
+│   │                       # SITE SCHEMA: { name, region, rss, enabled }. targetSites
+│   │                       #   filters out enabled:false BEFORE fetchRSS() is called —
+│   │                       #   disabled sites are never fetched, never cached, never
+│   │                       #   scored. s.enabled !== false treats missing field as enabled.
+│   │                       # /api/test-rss shares the same getSetting('rss.maxArticlesPerFeed')
+│   │                       #   cap as fetchRSSFromNet() (was an independent hardcoded 50) and
+│   │                       #   returns totalAvailable alongside articles.
+│   │                       # Both /api/search loops (keyword fallback + main embedding) send
+│   │                       #   an SSE progress message when articles.totalAvailable >
+│   │                       #   articles.length, telling the user a feed was truncated.
 │   │
 │   ├── history.js          # GET  /api/history   (filter, search, date)
 │   │                       # DELETE /api/history
@@ -132,6 +178,8 @@ newsLookup/
 │                           #   Replaces old hardcoded value. Adjustable per model via Settings screen.
 │                           #   When total titles > cap, a random sample is taken so all
 │                           #   sites get fair representation (not just first N feeds).
+│                           # Same enabled:false filtering as routes/search.js — disabled
+│                           #   sites' headlines never reach targetSites or the AI prompt.
 │
 ├── setup-windows.ps1       # Windows setup script. Checks Node/Ollama versions,
 │                           # prompts Cloud or Local mode, pulls embed + AI models,
@@ -161,6 +209,9 @@ newsLookup/
     ├── css/
     │   ├── index.css       # All styles for index.html (layout, chat, results, modals,
     │   │                   # keywords bar, mobile cards, responsive breakpoints).
+    │   │                   # About modal: .about-overlay/.about-box/.about-avatar etc. —
+    │   │                   #   reuses var(--bg2)/var(--border)/var(--accent)/var(--mono)
+    │   │                   #   design tokens from common.css; z-index 400 (highest modal).
     │   ├── collection.css  # All styles for collection.html (cards, tag editor,
     │   │                   # tag autocomplete, filters, responsive).
     │   ├── editor.css      # All styles for editor.html (site list, form fields,
@@ -172,25 +223,53 @@ newsLookup/
     ├── js/
     │   ├── index.js        # All JS for index.html: search (SSE streaming), results
     │   │                   # table + mobile cards, sort/export, suggested keywords,
-    │   │                   # history panel, summary modal, preview modal, clip,
-    │   │                   # sidebar toggle, drag-select, cache status.
+    │   │                   # history panel, summary modal, preview modal, About modal,
+    │   │                   # clip, sidebar toggle, drag-select, cache status.
+    │   │                   # APP_VERSION / APP_DESCRIPTION — constants at top of file
+    │   │                   #   (single source of truth for the About modal). Bump
+    │   │                   #   APP_VERSION here on every release.
+    │   │                   # openAboutModal() / closeAboutModal() / closeAboutOverlay()
+    │   │                   #   — same overlay+open-class+Escape pattern as summary/
+    │   │                   #   history/preview modals.
     │   │                   # AUTO-RETRY: zero results → retries at 30% threshold.
     │   │                   # showKwError(msg) — displays AI error in keyword area
     │   │                   #   when /generate returns error or empty keywords.
+    │   │                   # loadSites(): filters allSites to enabled !== false right
+    │   │                   #   after fetching /api/sites — disabled sites never appear
+    │   │                   #   in the checklist, region dropdown, drag-select, or any
+    │   │                   #   preview (Today/Yesterday/Week/All Time), and are never
+    │   │                   #   included in the `sites` array sent to /api/search.
+    │   │                   # loadPreviewCapNotice(): fetches /api/settings/rss on page load
+    │   │                   #   and writes the live maxArticlesPerFeed value into the second
+    │   │                   #   line of the preview modal footer (#previewCapNotice).
     │   ├── collection.js   # All JS for collection.html: load/filter/render clippings,
     │   │                   # AI search, tag editor + autocomplete + AI suggestions,
     │   │                   # summarise, export/import, re-embed missing vectors.
     │   ├── editor.js       # All JS for editor.html: site list CRUD, RSS test,
     │   │                   # duplicate feed finder, dirty tracking, toast notifications.
+    │   │                   # Enable/disable: toggle switch per site row (instant save via
+    │   │                   #   PUT /api/sites on change) + Enabled toggle in edit form.
+    │   │                   #   Status filter (Enabled/Disabled/Any, default Enabled)
+    │   │                   #   combines with region + name search in renderList().
+    │   │                   #   New sites default to enabled:true.
     │   └── settings.js     # All JS for settings.html: schema-driven card render,
     │                       # boolean toggles, numeric sliders, save/reset.
     │
     │   # ── HTML (structure only — no inline CSS or JS) ──────────────
     ├── index.html          # Main search UI. Loads: common.css → index.css → common.js → index.js
-    │                       # Toolbar: Clippings | History | Settings | Clear.
+    │                       # Toolbar: Thumbnails | Clippings | History | Settings | Clear | About.
     │                       # Similarity slider: 40%–90%, default 50%, step 5%.
     │                       #   Shows "score ≥ N%" label. Value sent directly as threshold.
     │                       #   NO auto-scaling — slider value = effective threshold.
+    │                       # Preview modal footer (#previewFooter): two-line layout forced via
+    │                       #   inline flex-direction:column — line 1 is the static "click to
+    │                       #   open" hint, line 2 (#previewCapNotice) shows the live
+    │                       #   rss.maxArticlesPerFeed cap, populated by loadPreviewCapNotice().
+    │                       # About modal (#aboutOverlay): app name, version, description,
+    │                       #   developer avatar/credit, "100% Vibe Coded" badge, GitHub +
+    │                       #   portfolio links (target="_blank"). Content populated from
+    │                       #   APP_VERSION / APP_DESCRIPTION constants in index.js on open —
+    │                       #   not hardcoded in the HTML.
     ├── collection.html     # Saved clippings manager ("My Clippings").
     │                       # Loads: common.css → collection.css → common.js → collection.js
     ├── settings.html       # App settings UI — auto-renders from /api/settings/schema.
@@ -200,6 +279,8 @@ newsLookup/
     │                       # hidden:true items in _meta are filtered out before rendering.
     └── editor.html         # RSS site editor.
                             # Loads: common.css → editor.css → common.js → editor.js
+                            # Status filter dropdown (Enabled/Disabled/Any, default
+                            #   Enabled) alongside the existing region filter.
 ```
 
 ---
@@ -241,6 +322,8 @@ config.js
 | Slider label: "score ≥ N%" | `public/js/index.js` → updateThreshold() shows percentage format |
 | Auto-retry at 30% on zero results | `public/js/index.js` → done handler retry block (RETRY_THRESHOLD = 0.30) |
 | RSS TTL cache (configurable, in-memory) | `lib/rss.js` → `getSetting('rss.cacheTtlMinutes')` read on every fetch |
+| **Per-feed article cap (configurable)** | `getSetting('rss.maxArticlesPerFeed')` (default 200, range 50–500) — used by `lib/rss.js fetchRSSFromNet()` and `routes/search.js /api/test-rss`. Replaces an old hardcoded `50` that silently truncated high-volume feeds regardless of date filter. |
+| **Feed truncation notice (UI)** | `lib/rss.js` stamps `totalAvailable` on the returned article array → `routes/search.js` sends an SSE progress message when truncated → `public/index.html` `#previewCapNotice` (second line of preview footer) shows the live cap via `loadPreviewCapNotice()` in `index.js` |
 | Embedding cache (per title, in-memory) | `lib/embedding.js` (articleVectorCache, embedCache) |
 | Keyword fallback when embed model offline | `routes/search.js` → keyword mode branch (hidden in UI, active in backend) |
 | 3-level summarise fallback | `routes/summarise.js` |
@@ -256,6 +339,12 @@ config.js
 | **Runtime settings load** | `server.js` → `loadSettings()` before any route mounts |
 | **Settings persist to disk** | `lib/settings.js` → flushes to `config/app-settings.json` on every write |
 | **Settings UI hidden items** | `hidden:true` in `_meta` → filtered in `settings.html` before render |
+| **Thumbnail extraction** | `lib/rss.js` → `extractThumbnail()` — 5-pattern priority, first match wins; multiple tags → first only |
+| **Thumbnail size (configurable)** | `getSetting('ui.thumbnailSize')` → body class `.thumb-{size}` → CSS var `--thumb-size`; applies to index.html + collection.html |
+| **Thumbnail toggle (session)** | `public/js/index.js` → `toggleThumbnails()` + `sessionStorage('nlg2_showThumbs')`; default shown |
+| **Thumbnail persisted in clippings** | `db/collectionDb.js` → `thumbnail TEXT` column; auto-migration on boot |
+| **Site enable/disable** | `rss-sites.json` → `enabled` field per site (default true if missing). `routes/search.js` + `routes/keywords.js` filter `targetSites` to `enabled !== false` before any `fetchRSS()` call — disabled sites are never fetched or cached. `public/js/index.js` → `loadSites()` filters `allSites` the same way, so disabled sites never appear in the main page checklist. `editor.js` → toggle switch per row (instant save) + Enabled toggle in edit form + status filter (Enabled/Disabled/Any, default Enabled). |
+| **About modal (app info layer)** | `public/index.html` → `#aboutOverlay` markup. `public/js/index.js` → `APP_VERSION` / `APP_DESCRIPTION` constants (top of file) + `openAboutModal()` populates `#aboutVersion`/`#aboutDesc` on open. `public/css/index.css` → `.about-*` rules. Triggered from toolbar button; same overlay/Escape/backdrop-click pattern as other modals. |
 
 ---
 
@@ -266,7 +355,7 @@ config.js
 | Ollama (local) | Embedding (always) | `EMBED_BASE_URL` (default: localhost:11434) |
 | Ollama (local) | Summaries, keywords, tags (local mode) | `AI_BASE_URL=http://localhost:11434` + `AI_MODEL=qwen2.5:7b` |
 | Ollama (cloud) | Summaries, keywords, tags (cloud mode) | `AI_BASE_URL=https://ollama.com` + `AI_API_KEY` |
-| RSS feeds | Article source | `rss-sites.json` (managed via `/api/sites`) |
+| RSS feeds | Article source | `rss-sites.json` (managed via `/api/sites`) — only `enabled !== false` sites are fetched |
 
 ---
 
@@ -277,7 +366,7 @@ config.js
 - `suggested_keywords_cache` — AI keyword results keyed by (region, dateFilter)
 
 **collection.db** — `db/collectionDb.js`
-- `collection` — saved clippings with vector, tags, summary, score
+- `collection` — saved clippings with vector, tags, summary, score, thumbnail
 - `summary_cache` — deduped summaries keyed by URL
 
 **config/app-settings.json** — `lib/settings.js` (file-backed, not SQLite)
@@ -288,8 +377,10 @@ config.js
 | `search.embedThreshold` | 0.5 | 0.4–0.9 | ❌ hidden | index.html slider controls this at search time |
 | `search.keywordFallbackEnabled` | true | boolean | ❌ hidden | Fallback when embed model offline |
 | `rss.cacheTtlMinutes` | 15 | 15–60 | ✅ | RSS in-memory cache TTL in minutes |
+| `rss.maxArticlesPerFeed` | 200 | 50–500 (step 50) | ✅ | Per-feed article cap (was hardcoded 50) — raise for high-volume sources |
 | `keywords.maxSuggested` | 10 | 10–20 | ✅ | Max trending keywords returned |
 | `keywords.maxTitlesForAI` | 350 | 50–400 (step 50) | ✅ | Max headlines sent to AI for keyword extraction |
+| `ui.thumbnailSize` | medium | small/medium/large/xlarge | ✅ | Article thumbnail size across all pages; CSS variable `--thumb-size` |
 
 ---
 
@@ -299,6 +390,7 @@ config.js
 |---|---|
 | Fix search ranking / threshold logic | `routes/search.js` + `lib/embedding.js` |
 | Change how RSS is fetched or cached | `lib/rss.js` |
+| **Feed truncated / "why don't I see all articles"** | `lib/rss.js` (`fetchRSSFromNet()` cap + `totalAvailable`) + `routes/search.js` (`/api/test-rss` cap + SSE progress notices) + `config/app-settings.default.json` + `lib/settings.js` (`rss.maxArticlesPerFeed`) + `public/index.html` (`#previewCapNotice`) + `public/js/index.js` (`loadPreviewCapNotice()`) |
 | Modify summary levels or caching | `routes/summarise.js` + `db/collectionDb.js` |
 | Add a new API route | `server.js` (mount) + new `routes/xxx.js` |
 | Change AI model or auth | `config.js` + `lib/ai.js` + `setup-windows.ps1` + `setup-linux.sh` + `uninstall-windows.ps1` + `uninstall-linux.sh` |
@@ -313,8 +405,16 @@ config.js
 | **Fix index.html threshold/slider** | `public/js/index.js` → updateThreshold() + slider HTML in index.html |
 | **Fix zero-results auto-retry** | `public/js/index.js` → done handler retry block (RETRY_THRESHOLD = 0.30) |
 | **Fix keyword hallucinations** | `routes/keywords.js` → `.filter(k => k.count > 0)` in keywordsWithCount |
+| **Fix thumbnail extraction** | `lib/rss.js` → `extractThumbnail()` — check pattern priority or XML parser options |
+| **Change thumbnail size options** | `config/app-settings.default.json` → `ui.thumbnailSize._meta.options` + `public/css/index.css` + `public/css/collection.css` |
+| **Fix site enable/disable toggle** | `public/js/editor.js` (toggle + status filter) + `public/css/editor.css` (toggle styles) + `public/editor.html` (status filter dropdown) |
+| **Disabled sites still being fetched/searched** | `routes/search.js` + `routes/keywords.js` → check `targetSites` filter (`s.enabled !== false`) |
+| **Disabled sites appearing on main page** | `public/js/index.js` → `loadSites()` filter |
+| **Add/remove a site that ships by default** | `rss-sites_json.template` (master copy — also update `rss-sites.json` for the current install) |
 | **Update planned / completed tasks** | `ROADMAP.md` |
 | **Add a release entry** | `RELEASE_NOTE.md` |
+| **Update the version shown in the About layer** | `public/js/index.js` → `APP_VERSION` constant (top of file) |
+| **Edit the About layer content/links/styling** | `public/index.html` (`#aboutOverlay` markup) + `public/js/index.js` (`APP_VERSION`/`APP_DESCRIPTION` constants, `openAboutModal()`) + `public/css/index.css` (`.about-*` rules) |
 
 ---
 

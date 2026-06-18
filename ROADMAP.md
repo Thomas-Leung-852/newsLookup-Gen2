@@ -30,6 +30,22 @@
 | 1.3.0 | Configurable `keywords.maxTitlesForAI` setting — adjustable per model via Settings UI |
 | 1.3.0 | Mobile UI: welcome card hidden on small screens |
 | 1.3.0 | Mobile UI: keyword label hidden on small screens |
+| 1.4.0 | Article thumbnails extracted from RSS feeds — multi-pattern support (media:thumbnail, media:content, enclosure, plain image URL, img-in-description) |
+| 1.4.0 | Fixed XML parser config — `ignoreAttributes:false` added so feed attributes (url, type, medium) are correctly parsed across all sources |
+| 1.4.0 | Thumbnails shown in search results table (desktop + mobile), all four preview modals (Today / Yesterday / Week / All Time), and My Clippings cards |
+| 1.4.0 | Session-based thumbnail show/hide toggle button on main search page |
+| 1.4.0 | Configurable thumbnail size (Small / Medium / Large / Extra Large) in Settings — new `ui` domain with `select` type; CSS variable drives size consistently across all pages |
+| 1.4.0 | `select` control type added to settings schema system (`lib/settings.js` + `js/settings.js`) |
+| 1.4.0 | `thumbnail` field persisted to `collection` DB table — auto-migration for existing databases |
+| 1.4.0 | Both clip paths (`clipArticle()` + `addToCollection()`) pass thumbnail to the collection API |
+| 1.4.0 | RSS site enable/disable toggle — per-site `enabled` flag in `rss-sites.json` / `rss-sites_json.template` |
+| 1.4.0 | Disabled sites excluded from RSS fetch/cache in `/api/search` and `/api/suggested-keywords/generate` |
+| 1.4.0 | Disabled sites excluded from the main search page site checklist, region filter, and previews |
+| 1.4.0 | RSS Site Editor: toggle switch per site row (instant save) + Enabled field in edit form |
+| 1.4.0 | RSS Site Editor: status filter (Enabled / Disabled / Any, default Enabled) alongside region filter |
+| 1.4.0 | About layer on main page — toolbar button opens a modal with app description, version (sourced from `APP_VERSION` constant), developer credit, "100% Vibe Coded" badge, and GitHub/portfolio links (open in new tab) |
+| 1.4.0 | Fixed RSS per-feed article cap hardcoded at 50 — now a configurable `rss.maxArticlesPerFeed` setting (default 200), fixing high-volume feeds (e.g. HK01) appearing truncated under Week/All Time |
+| 1.4.0 | Added feed-truncation notice — SSE progress message during search + second line in the News Preview footer, so users see when a feed hit the cap and where to raise it |
 
 ---
 

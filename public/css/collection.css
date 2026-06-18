@@ -25,6 +25,26 @@ body {
   --tag-bg:     #2a2008;
   --tag-border: #92400e;
   --tag-color:  #fbbf24;
+  --thumb-size: 80px; /* default=medium, overridden by body size classes */
+}
+
+/* Thumbnail size classes (set on body, driven by Settings → ui.thumbnailSize) */
+body.thumb-small   { --thumb-size: 48px; }
+body.thumb-medium  { --thumb-size: 80px; }
+body.thumb-large   { --thumb-size: 120px; }
+body.thumb-xlarge  { --thumb-size: 160px; }
+
+/* Hide all thumbnails when toggled off */
+body.thumbs-off .col-thumb { display: none !important; }
+
+.col-thumb {
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  flex-shrink: 0;
 }
 
 /* ── Layout ── */

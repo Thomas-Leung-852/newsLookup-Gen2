@@ -39,6 +39,7 @@
   },
   "rss": {
     "cacheTtlMinutes": 15,
+    "maxArticlesPerFeed": 200,
     "_meta": {
       "cacheTtlMinutes": {
         "label": "RSS Cache TTL",
@@ -48,6 +49,16 @@
         "max": 60,
         "unit": "min",
         "default": 15
+      },
+      "maxArticlesPerFeed": {
+        "label": "Max Articles per Feed",
+        "description": "Maximum number of articles fetched from each RSS feed (most recent first). If a source publishes more items than this, the older ones are dropped before any date filtering runs — raise this if \"Week\" or \"All Time\" looks incomplete for a high-volume feed.",
+        "type": "integer",
+        "min": 50,
+        "max": 500,
+        "step": 50,
+        "unit": "articles",
+        "default": 200
       }
     }
   },
@@ -72,6 +83,23 @@
         "step": 50,
         "unit": "titles",
         "default": 350
+      }
+    }
+  },
+  "ui": {
+    "thumbnailSize": "medium",
+    "_meta": {
+      "thumbnailSize": {
+        "label": "Article Thumbnail Size",
+        "description": "Size of article thumbnail images shown in search results, previews, and clippings.",
+        "type": "select",
+        "options": [
+          { "value": "small",  "label": "Small" },
+          { "value": "medium", "label": "Medium" },
+          { "value": "large",  "label": "Large" },
+          { "value": "xlarge", "label": "Extra Large" }
+        ],
+        "default": "medium"
       }
     }
   },

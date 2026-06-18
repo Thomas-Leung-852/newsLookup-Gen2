@@ -46,6 +46,7 @@ export async function initCollectionDB() {
   // newsId is a SHA-256 hash of the URL, used as a stable dedup key
   // vector stores the embedding as a JSON-serialised float array (TEXT)
   // tags stores a comma-separated string of user/AI-assigned labels
+  // thumbnail stores the article image URL extracted from the RSS feed
   collectionDb.run(`
     CREATE TABLE IF NOT EXISTS collection (
       id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,9 +61,18 @@ export async function initCollectionDB() {
       region    TEXT,
       pubDate   TEXT,                  -- ISO8601, normalised on insert
       savedAt   TEXT NOT NULL,         -- ISO8601 insert timestamp
-      tags      TEXT                   -- comma-separated, e.g. "trade war, hk politics"
+      tags      TEXT,                  -- comma-separated, e.g. "trade war, hk politics"
+      thumbnail TEXT                   -- image URL extracted from RSS feed, nullable
     )
   `);
+
+  // Migration: add thumbnail column to existing databases that predate this field
+  try {
+    collectionDb.run(`ALTER TABLE collection ADD COLUMN thumbnail TEXT`);
+    console.log("✂️  Migrated collection table: added thumbnail column");
+  } catch (_) {
+    // Column already exists — safe to ignore
+  }
   collectionDb.run(`CREATE INDEX IF NOT EXISTS idx_savedAt ON collection(savedAt)`);
   collectionDb.run(`CREATE INDEX IF NOT EXISTS idx_pubDate ON collection(pubDate)`);
 

@@ -141,6 +141,7 @@ main {
   padding: 3px 10px;
   cursor: pointer;
   transition: all 0.15s;
+  margin-left: 5px;
 }
 .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
 
@@ -267,6 +268,61 @@ tbody td { padding: 9px 12px; vertical-align: top; }
 .td-topic  { font-size: 11px; color: var(--warn); font-family: var(--mono); }
 .td-title a { color: var(--text); text-decoration: none; line-height: 1.5; }
 .td-title a:hover { color: var(--accent); text-decoration: underline; }
+
+/* ── Article thumbnails ──
+   Size is controlled by a body-level class set from Settings → ui.thumbnailSize:
+     .thumb-small (48px) · .thumb-medium (80px, default) · .thumb-large (120px) · .thumb-xlarge (160px)
+   td-thumb width/padding scale alongside the image size so the table column
+   doesn't clip larger thumbnails. */
+:root {
+  --thumb-size: 80px; /* fallback = medium, overridden by body size classes below */
+}
+body.thumb-small   { --thumb-size: 48px; }
+body.thumb-medium  { --thumb-size: 80px; }
+body.thumb-large   { --thumb-size: 120px; }
+body.thumb-xlarge  { --thumb-size: 160px; }
+
+.td-thumb { width: calc(var(--thumb-size) + 8px); padding: 6px 8px; }
+.article-thumb {
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  display: block;
+}
+.td-title-wrap { display: flex; align-items: flex-start; gap: 10px; }
+.td-title-wrap .article-thumb { flex-shrink: 0; }
+.mob-card-thumb {
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  flex-shrink: 0;
+}
+.mob-card-title-row { display: flex; align-items: flex-start; gap: 10px; }
+
+/* Hide thumbnails when toggled off */
+.thumbs-off .article-thumb,
+.thumbs-off .mob-card-thumb,
+.thumbs-off .td-thumb,
+.thumbs-off .preview-article-thumb {
+  display: none !important;
+}
+.preview-article-thumb {
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  flex-shrink: 0;
+}
+#thumbToggleBtn.active { border-color: var(--accent2); color: var(--accent2); background: var(--bg3); }
+#thumbToggleBtn.inactive { border-color: var(--border); color: var(--muted); }
 
 .empty-state {
   padding: 30px;
@@ -697,6 +753,44 @@ tbody td { padding: 9px 12px; vertical-align: top; }
   flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;
 }
 
+/* ── About modal ── */
+.about-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 400;
+  align-items: center; justify-content: center;
+}
+.about-overlay.open { display: flex; }
+.about-box {
+  position: relative;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; width: 420px; max-width: 92vw;
+  padding: 28px 26px 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  text-align: center;
+}
+.about-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; color: var(--muted);
+  font-size: 16px; cursor: pointer;
+}
+.about-close:hover { color: var(--danger); }
+.about-name { font-family: var(--mono); font-size: 18px; font-weight: 600; }
+.about-version { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+.about-desc { font-size: 13px; line-height: 1.7; color: var(--text); margin: 16px 0; }
+.about-divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+.about-dev { display: flex; align-items: center; gap: 14px; text-align: left; }
+.about-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+.about-dev-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.about-vibe-badge {
+  display: inline-block; margin-top: 4px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 10px;
+  padding: 2px 8px;
+}
+.about-links { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.about-links a { font-size: 12px; color: var(--accent2); text-decoration: none; }
+.about-links a:hover { text-decoration: underline; }
+
 /* ── Clip button ── */
 .clip-btn {
   background: none; border: none; cursor: pointer;
@@ -811,6 +905,7 @@ tbody td { padding: 9px 12px; vertical-align: top; }
   .summary-box   { width: 95vw; max-height: 85vh; }
   .preview-box   { width: 98vw; max-width: 98vw; max-height: 88vh; }
   .history-panel { width: 95vw; max-width: 95vw; }
+  .about-box     { padding: 22px 18px; }
 
   .preview-article-num { display: none; }
   .preview-article { padding: 5px 12px; }

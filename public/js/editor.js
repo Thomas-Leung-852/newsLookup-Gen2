@@ -38,14 +38,16 @@ function findDuplicates() {
     dupGroups.length + ' duplicate group' + (dupGroups.length > 1 ? 's' : '') + ' · ' + totalDups + ' affected sites';
 
   document.getElementById('dupBody').innerHTML = dupGroups.map(([url, group]) => {
-    const rows = group.map(({ site, idx }) =>
-      '<div class="dup-row">' +
+    const rows = group.map(({ site, idx }) => {
+      const isEnabled = site.enabled !== false;
+      return '<div class="dup-row">' +
       '<span class="dup-name">'   + esc(site.name)   + '</span>' +
       '<span class="dup-region">' + esc(site.region) + '</span>' +
+      '<span class="dup-status ' + (isEnabled ? 'on' : 'off') + '">' + (isEnabled ? 'Enabled' : 'Disabled') + '</span>' +
       '<button class="dup-edit-btn" onclick="dupEdit('   + idx + ')">✎ Edit</button>' +
       '<button class="dup-del-btn"  onclick="dupDelete(' + idx + ')">✕ Delete</button>' +
-      '</div>'
-    ).join('');
+      '</div>';
+    }).join('');
     return '<div class="dup-group">' +
       '<div class="dup-group-header">🔗 ' + esc(url) + '</div>' +
       rows + '</div>';
@@ -104,11 +106,18 @@ function updateCount() {
 function renderList() {
   const q      = document.getElementById('searchInput').value.toLowerCase();
   const region = document.getElementById('regionFilter').value;
+  const status = document.getElementById('statusFilter').value; // 'enabled' | 'disabled' | 'any'
 
-  filtered = sites.filter(s =>
-    (!region || s.region === region) &&
-    (!q      || s.name.toLowerCase().includes(q))
-  );
+  filtered = sites.filter(s => {
+    const isEnabled = s.enabled !== false;
+    const statusOk =
+      status === 'any'      ? true :
+      status === 'disabled' ? !isEnabled :
+      isEnabled; // 'enabled' (default)
+    return statusOk &&
+      (!region || s.region === region) &&
+      (!q      || s.name.toLowerCase().includes(q));
+  });
 
   const list = document.getElementById('siteList');
   if (!filtered.length) {
@@ -117,13 +126,35 @@ function renderList() {
   }
 
   list.innerHTML = filtered.map(s => {
-    const realIdx  = sites.indexOf(s);
-    const isActive = realIdx === activeIdx;
-    return `<div class="site-row${isActive ? ' active' : ''}" onclick="selectSite(${realIdx})">
+    const realIdx   = sites.indexOf(s);
+    const isActive  = realIdx === activeIdx;
+    const isEnabled = s.enabled !== false;
+    return `<div class="site-row${isActive ? ' active' : ''}${isEnabled ? '' : ' disabled'}" onclick="selectSite(${realIdx})">
+      <label class="toggle-switch" onclick="event.stopPropagation()" title="${isEnabled ? 'Enabled — click to disable' : 'Disabled — click to enable'}">
+        <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleSiteEnabled(${realIdx}, this.checked)"/>
+        <span class="toggle-slider"></span>
+      </label>
       <span class="sname">${esc(s.name)}</span>
       <span class="sregion">${esc(s.region)}</span>
     </div>`;
   }).join('');
+}
+
+// ── Toggle enabled/disabled directly from the list row ───────────────────────
+async function toggleSiteEnabled(realIdx, enabled) {
+  const site = sites[realIdx];
+  site.enabled = enabled;
+  try {
+    await saveToServer();
+    showToast(`${enabled ? '✅ Enabled' : '⏸ Disabled'} "${site.name}".`);
+  } catch (e) {
+    site.enabled = !enabled; // revert on failure
+  }
+  renderList();
+  if (realIdx === activeIdx) {
+    const f = document.getElementById('f_enabled');
+    if (f) f.checked = sites[activeIdx].enabled !== false;
+  }
 }
 
 // ── Select a site ─────────────────────────────────────────────────────────────
@@ -160,7 +191,8 @@ async function deleteSite() {
 
 // ── Render right form ─────────────────────────────────────────────────────────
 function renderForm(site) {
-  const v = site || { name: '', rss: '', region: '' };
+  const v = site || { name: '', rss: '', region: '', enabled: true };
+  const isEnabled = v.enabled !== false;
   document.getElementById('rightPanel').innerHTML = `
     <div class="right-title">${site ? 'Edit Site' : 'New Site'}</div>
     <div class="fields-area">
@@ -178,6 +210,14 @@ function renderForm(site) {
         <input id="f_region" value="${esc(v.region)}" placeholder="e.g. HK, Asia, International, Tech"
           list="regionOptions" autocomplete="off" oninput="markDirty()"/>
         <span class="hint">Type to see existing regions, or enter a new one.</span>
+      </div>
+      <div class="field-group">
+        <label>Status</label>
+        <label class="toggle-switch form-toggle">
+          <input type="checkbox" id="f_enabled" ${isEnabled ? 'checked' : ''} onchange="markDirty()"/>
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="hint">When disabled, the app will not fetch this site's RSS feed.</span>
       </div>
       <div id="testResult" class="test-result"></div>
     </div>
@@ -222,15 +262,16 @@ function clearFields() {
 
 // ── Save site ─────────────────────────────────────────────────────────────────
 async function saveSite() {
-  const name   = (document.getElementById('f_name')?.value   || '').trim();
-  const rss    = (document.getElementById('f_rss')?.value    || '').trim();
-  const region = (document.getElementById('f_region')?.value || '').trim();
+  const name    = (document.getElementById('f_name')?.value   || '').trim();
+  const rss     = (document.getElementById('f_rss')?.value    || '').trim();
+  const region  = (document.getElementById('f_region')?.value || '').trim();
+  const enabled = document.getElementById('f_enabled')?.checked ?? true;
 
   if (!name)   { alert('⚠️ Display Name is required.'); return; }
   if (!rss)    { alert('⚠️ RSS Feed URL is required.'); return; }
   if (!region) { alert('⚠️ Region is required.'); return; }
 
-  const record = { name, rss, region };
+  const record = { name, rss, region, enabled };
 
   if (activeIdx >= 0) {
     sites[activeIdx] = record;

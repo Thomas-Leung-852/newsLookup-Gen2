@@ -4,6 +4,21 @@
    Requires: common/common.js loaded first (provides esc()).
    ============================================================ */
 
+// ── Thumbnail size (loaded from /api/settings/ui on init) ────────────────────
+async function loadThumbnailSize() {
+  try {
+    const res  = await fetch('/api/settings/ui');
+    const data = await res.json();
+    const valid = ['small', 'medium', 'large', 'xlarge'];
+    const size  = valid.includes(data?.thumbnailSize) ? data.thumbnailSize : 'medium';
+    valid.forEach(v => document.body.classList.remove('thumb-' + v));
+    document.body.classList.add('thumb-' + size);
+  } catch (_) {
+    document.body.classList.add('thumb-medium');
+  }
+}
+loadThumbnailSize();
+
 let allItems    = [];
 let currentMode = 'all'; // 'all' | 'search'
 
@@ -211,9 +226,14 @@ function renderItems(items, isSearch = false) {
       : '';
     const editorChipsHtml = buildEditorChipsHtml(item.id, item.tags || '');
 
+    const thumbHtml = item.thumbnail
+      ? `<img class="col-thumb" src="${esc(item.thumbnail)}" alt="" loading="lazy" onerror="this.remove()">`
+      : '';
+
     return `<div class="col-card" id="card_${item.id}">
       <div class="col-card-header">
         ${scoreLabel}
+        ${thumbHtml}
         <div class="col-title" style="flex:1">
           <a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.title)}</a>
         </div>

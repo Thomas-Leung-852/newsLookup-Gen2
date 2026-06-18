@@ -4,6 +4,10 @@
    Requires: common/common.js loaded first (provides esc()).
    ============================================================ */
 
+// ── App Info (update APP_VERSION on every release) ──────────────────────────
+const APP_VERSION = '1.4.0';
+const APP_DESCRIPTION = 'An AI-powered news search engine that finds, summarizes, and saves articles matching your interests.';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentResults = [];
 let sortCol = 'score';   // default sort by score
@@ -19,6 +23,62 @@ let startTime = null;
 let searchId = 0; // unique ID per search to avoid DOM ID conflicts
 let timerInterval = null;
 let articlesProcessed = 0;
+let showThumbnails = sessionStorage.getItem('nlg2_showThumbs') !== 'off'; // default: shown
+
+function applyThumbToggleUI() {
+  const btn = document.getElementById('thumbToggleBtn');
+  document.body.classList.toggle('thumbs-off', !showThumbnails);
+  if (btn) {
+    btn.classList.toggle('active', showThumbnails);
+    btn.classList.toggle('inactive', !showThumbnails);
+    btn.textContent = showThumbnails ? '🖼️ Thumbnails' : '🖼️ Thumbnails: off';
+  }
+}
+
+function applyThumbSize(size) {
+  const valid = ['small', 'medium', 'large', 'xlarge'];
+  const s = valid.includes(size) ? size : 'medium';
+  valid.forEach(v => document.body.classList.remove('thumb-' + v));
+  document.body.classList.add('thumb-' + s);
+}
+
+async function loadThumbnailSize() {
+  try {
+    const res  = await fetch('/api/settings/ui');
+    const data = await res.json();
+    applyThumbSize(data?.thumbnailSize || 'medium');
+  } catch (e) {
+    applyThumbSize('medium');
+  }
+}
+
+function toggleThumbnails() {
+  showThumbnails = !showThumbnails;
+  sessionStorage.setItem('nlg2_showThumbs', showThumbnails ? 'on' : 'off');
+  applyThumbToggleUI();
+}
+
+function thumbImg(url, cls) {
+  if (!url) return '';
+  return '<img class="' + cls + '" src="' + esc(url) + '" alt="" loading="lazy" onerror="this.remove()">';
+}
+
+applyThumbToggleUI();
+loadThumbnailSize();
+loadPreviewCapNotice();
+
+async function loadPreviewCapNotice() {
+  try {
+    const res  = await fetch('/api/settings/rss');
+    const data = await res.json();
+    const cap  = data?.maxArticlesPerFeed || 200;
+    document.getElementById('previewCapNotice').textContent =
+      'Showing up to ' + cap + ' articles per feed — raise this in Settings → RSS if a source looks cut off';
+  } catch (e) {
+    document.getElementById('previewCapNotice').textContent =
+      'Note: each feed is capped to a configurable number of articles — see Settings → RSS';
+  }
+}
 
 function formatElapsed(ms) {
   const s = Math.floor(ms / 1000);
@@ -77,8 +137,9 @@ async function previewSelected() {
         else if (days < 365) dateLabel = Math.floor(days/30) + 'mo ago';
         else dateLabel = Math.floor(days/365) + 'yr ago';
       }
-      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region});
+      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region,thumbnail:a.thumbnail||null});
       return '<div class="preview-article"><span class="preview-article-num">' + (i+1) + '.</span>' +
+        thumbImg(a.thumbnail, 'preview-article-thumb') +
         '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">' + esc(a.title) + '</a>' +
         (dateLabel ? '<span class="preview-article-date">' + dateLabel + '</span>' : '') +
         '<button class="clip-btn" title="Add to My Clippings" onclick="clipArticle(this,decodeURIComponent(\'' + encodeURIComponent(clipData) + '\'))">✂️</button>' +
@@ -162,8 +223,9 @@ async function yesterdayPreview() {
   const html = valid.map(function(block) {
     const rows = block.articles.map(function(a, i) {
       const t = a.pubDate ? new Date(a.pubDate).toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' }) : '';
-      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region});
+      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region,thumbnail:a.thumbnail||null});
       return '<div class="preview-article"><span class="preview-article-num">' + (i+1) + '.</span>' +
+        thumbImg(a.thumbnail, 'preview-article-thumb') +
         '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">' + esc(a.title) + '</a>' +
         (t ? '<span class="preview-article-date">' + t + '</span>' : '') +
         '<button class="clip-btn" title="Add to My Clippings" onclick="clipArticle(this,decodeURIComponent(\'' + encodeURIComponent(clipData) + '\'))">✂️</button>' +
@@ -224,8 +286,9 @@ async function weekPreview() {
       const d = a.pubDate ? new Date(a.pubDate) : null;
       const days = d ? Math.floor((now - d) / 86400000) : null;
       const label = days === 0 ? 'today' : days === 1 ? 'yesterday' : days !== null ? days + 'd ago' : '';
-      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region});
+      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region,thumbnail:a.thumbnail||null});
       return '<div class="preview-article"><span class="preview-article-num">' + (i+1) + '.</span>' +
+        thumbImg(a.thumbnail, 'preview-article-thumb') +
         '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">' + esc(a.title) + '</a>' +
         (label ? '<span class="preview-article-date">' + label + '</span>' : '') +
         '<button class="clip-btn" title="Add to My Clippings" onclick="clipArticle(this,decodeURIComponent(\'' + encodeURIComponent(clipData) + '\'))">✂️</button>' +
@@ -287,9 +350,10 @@ async function todayPreview() {
   const html = valid.map(function(block) {
     const rows = block.articles.map(function(a, i) {
       const t = a.pubDate ? new Date(a.pubDate).toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' }) : '';
-      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region});
+      const clipData = JSON.stringify({title:a.title,link:a.link,pubDate:a.pubDate||'',source:block.site.name,region:block.site.region,thumbnail:a.thumbnail||null});
       return '<div class="preview-article">' +
         '<span class="preview-article-num">' + (i+1) + '.</span>' +
+        thumbImg(a.thumbnail, 'preview-article-thumb') +
         '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">' + esc(a.title) + '</a>' +
         (t ? '<span class="preview-article-date">' + t + '</span>' : '') +
         '<button class="clip-btn" title="Add to My Clippings" onclick="clipArticle(this,decodeURIComponent(\'' + encodeURIComponent(clipData) + '\'))">✂️</button>' +
@@ -315,7 +379,10 @@ async function loadSites(retries = 3) {
   try {
     const res = await fetch('/api/sites');
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    allSites = await res.json();
+    const fetched = await res.json();
+    // Only enabled sites are shown — disabled sites are never selectable,
+    // never previewed, and never sent to /api/search (so no RSS fetch/cache).
+    allSites = fetched.filter(s => s.enabled !== false);
 
     const regions = [...new Set(allSites.map(s => s.region))].sort();
     const select  = document.getElementById('regionFilter');
@@ -894,6 +961,7 @@ function renderLiveTable(sid) {
       <td style="width:32px;text-align:center">
         <input type="checkbox" class="result-cb" data-idx="${i}" style="accent-color:var(--accent);cursor:pointer">
       </td>
+      <td class="td-thumb">${thumbImg(a.thumbnail, 'article-thumb')}</td>
       <td class="td-source">${esc(a.source)}</td>
       <td class="td-region">${esc(a.region)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent2);text-align:center">
@@ -913,7 +981,10 @@ function renderLiveTable(sid) {
         <button class="summarise-btn" onclick="summariseArticle(${i})" title="Summarise with AI" style="flex-shrink:0">🤖</button>
       </div>
       <div class="mob-card-row2">${esc(a.region)}</div>
-      <div class="mob-card-title"><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.title)}</a></div>
+      <div class="mob-card-title-row">
+        ${thumbImg(a.thumbnail, 'mob-card-thumb')}
+        <div class="mob-card-title"><a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.title)}</a></div>
+      </div>
     </div>`).join('');
 
   wrap.innerHTML = `
@@ -933,6 +1004,7 @@ function renderLiveTable(sid) {
         <table>
           <thead><tr>
             <th style="width:32px"></th>
+            <th style="width:56px"></th>
             <th class="sortable" onclick="sortResults('source')">Source <span class="sort-icon" id="sort_source"></span></th>
             <th class="sortable" onclick="sortResults('region')">Region <span class="sort-icon" id="sort_region"></span></th>
             <th class="sortable" onclick="sortResults('score')" style="width:60px">Score <span class="sort-icon" id="sort_score">▼</span></th>
@@ -1155,6 +1227,7 @@ async function addToCollection() {
         source:    currentSummaryArticle.source,
         region:    currentSummaryArticle.region,
         pubDate:   currentSummaryArticle.pubDate,
+        thumbnail: currentSummaryArticle.thumbnail || null,
       }),
     });
     const data = await res.json();
@@ -1228,6 +1301,16 @@ async function summariseArticle(idx) {
 
 function closeSummaryModal(e) { if (e.target === document.getElementById('summaryOverlay')) closeSummaryOverlay(); }
 function closeSummaryOverlay() { document.getElementById('summaryOverlay').classList.remove('open'); }
+
+// ── About Modal ──────────────────────────────────────────────────────────────
+function openAboutModal() {
+  document.getElementById('aboutVersion').textContent = 'v' + APP_VERSION;
+  document.getElementById('aboutDesc').textContent = APP_DESCRIPTION;
+  document.getElementById('aboutOverlay').classList.add('open');
+}
+function closeAboutModal(e) { if (e.target === document.getElementById('aboutOverlay')) closeAboutOverlay(); }
+function closeAboutOverlay() { document.getElementById('aboutOverlay').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAboutOverlay(); });
 
 // ── Cache Status ──────────────────────────────────────────────────────────────
 async function updateCacheStatus() {
@@ -1303,7 +1386,7 @@ async function clipArticle(btn, articleJson) {
     const saveRes = await fetch('/api/collection', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: article.link, title: article.title, summary: '', source: article.source, region: article.region, pubDate: article.pubDate }),
+      body: JSON.stringify({ url: article.link, title: article.title, summary: '', source: article.source, region: article.region, pubDate: article.pubDate, thumbnail: article.thumbnail || null }),
     });
     const saveData = await saveRes.json();
     if (!saveData.ok) throw new Error(saveData.error || 'Save failed');

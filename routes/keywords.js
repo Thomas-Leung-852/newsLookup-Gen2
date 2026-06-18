@@ -100,6 +100,9 @@ router.get("/", (req, res) => {
  *         Keyword counts are computed post-AI by matching keywords against
  *         the actual titles — this verifies the AI's claims and provides
  *         a frequency signal for sorting.
+ *         Sites with enabled:false are excluded from targetSites — their
+ *         headlines never reach the AI prompt (s.enabled !== false, so
+ *         missing field = enabled).
  *
  * Request body:
  *   region     {string} - Region name or "all" (default: "all")
@@ -114,9 +117,10 @@ router.post("/generate", async (req, res) => {
   if (!AI_API_KEY) return res.status(500).json({ error: "AI_API_KEY not set on server." });
 
   try {
-    const targetSites = (region && region !== "all")
+    const targetSites = ((region && region !== "all")
       ? ALL_SITES.filter(s => s.region === region)
-      : ALL_SITES;
+      : ALL_SITES
+    ).filter(s => s.enabled !== false);
 
     if (!targetSites.length) {
       return res.status(400).json({ error: "No sites found for region: " + region });

@@ -32,6 +32,11 @@
       <select class="filter-select" id="regionFilter" onchange="renderList()">
         <option value="">All Regions</option>
       </select>
+      <select class="filter-select" id="statusFilter" onchange="renderList()">
+        <option value="enabled" selected>Enabled</option>
+        <option value="disabled">Disabled</option>
+        <option value="any">Any</option>
+      </select>
     </div>
     <div class="site-list" id="siteList"></div>
   </div>
